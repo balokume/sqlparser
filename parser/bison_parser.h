@@ -202,11 +202,12 @@ extern int hsql_debug;
     SQL_ON = 379,
     SQL_OR = 380,
     SQL_TO = 381,
-    SQL_EQUALS = 382,
-    SQL_LESS = 383,
-    SQL_GREATER = 384,
-    SQL_NOTNULL = 385,
-    SQL_UMINUS = 386
+    SQL_QUIT = 382,
+    SQL_EQUALS = 383,
+    SQL_LESS = 384,
+    SQL_GREATER = 385,
+    SQL_NOTNULL = 386,
+    SQL_UMINUS = 387
   };
 #endif
 
@@ -233,6 +234,8 @@ union HSQL_STYPE
 	hsql::DropStatement*   	drop_stmt;
 	hsql::PrepareStatement* prep_stmt;
 	hsql::ExecuteStatement* exec_stmt;
+	hsql::ShowStatement*	show_stmt;
+	hsql::QuitStatement*	quit_stmt;
 
 	hsql::TableRef* table;
 	hsql::Expr* expr;
@@ -252,7 +255,7 @@ union HSQL_STYPE
 	std::vector<hsql::Expr*>* expr_vec;
 	std::vector<hsql::OrderDescription*>* order_vec;
 
-#line 256 "bison_parser.h" /* yacc.c:1909  */
+#line 259 "bison_parser.h" /* yacc.c:1909  */
 };
 # define HSQL_STYPE_IS_TRIVIAL 1
 # define HSQL_STYPE_IS_DECLARED 1

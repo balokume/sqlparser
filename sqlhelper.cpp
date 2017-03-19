@@ -195,6 +195,20 @@ namespace hsql {
     }
   }
 
+  void printShowStatementInfo(const ShowStatement* stmt, uintmax_t numIndent) {
+    inprint("ShowStatment", numIndent);
+    if(stmt->type == ShowStatement::kTable){
+        inprint("Table", stmt->tableName, numIndent + 1);
+    }
+    else{
+        inprint("Schema", numIndent + 1);
+    }
+  }
+
+  void printQuitStatementInfo(const QuitStatement* stmt, uintmax_t numIndent) {
+    inprint("QuitStatment", numIndent);
+  }
+
   void printStatementInfo(const SQLStatement* stmt) {
     switch (stmt->type()) {
     case kStmtSelect:
@@ -209,6 +223,12 @@ namespace hsql {
     case kStmtImport:
       printImportStatementInfo((const ImportStatement*) stmt, 0);
       break;
+    case kStmtShow:
+        printShowStatementInfo((const ShowStatement*) stmt, 0);
+        break;
+    case kStmtQuit:
+        printQuitStatementInfo((const QuitStatement*) stmt, 0);
+        break;
     default:
       break;
     }

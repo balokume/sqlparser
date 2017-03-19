@@ -10,7 +10,7 @@ SOURCES += main.cpp \
     sql/Expr.cpp \
     sql/statements.cpp \
     parser/bison_parser.cpp \
-    parser/flex_lexer.cpp
+    parser/flex_lexer.cpp \
 
 HEADERS += \
     sqlhelper.h \
@@ -29,6 +29,8 @@ HEADERS += \
     sql/statements.h \
     sql/Table.h \
     sql/UpdateStatement.h \
+    sql/ShowStatement.h \
+    sql/QuitStatement.h \
     parser/bison_parser.h \
     parser/flex_lexer.h \
     parser/parser_typedef.h \

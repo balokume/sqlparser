@@ -244,6 +244,22 @@ namespace hsql {
     }
   }
 
+  // ShowStatement
+  ShowStatement::ShowStatement(EntityType type) :
+      SQLStatement(kStmtShow),
+      type(type),
+      tableName(NULL) {}
+
+  ShowStatement::~ShowStatement(){
+      free(tableName);
+  }
+
+  // QuitStatement
+  QuitStatement::QuitStatement() :
+      SQLStatement(kStmtQuit){}
+
+  QuitStatement::~QuitStatement(){}
+
   // TableRef
   TableRef::TableRef(TableRefType type) :
     type(type),

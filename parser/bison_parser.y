@@ -114,6 +114,8 @@ int yyerror(YYLTYPE* llocp, SQLParserResult** result, yyscan_t scanner, const ch
 	hsql::DropStatement*   	drop_stmt;
 	hsql::PrepareStatement* prep_stmt;
 	hsql::ExecuteStatement* exec_stmt;
+	hsql::ShowStatement*	show_stmt;
+	hsql::QuitStatement*	quit_stmt;
 
 	hsql::TableRef* table;
 	hsql::Expr* expr;
@@ -174,6 +176,7 @@ int yyerror(YYLTYPE* llocp, SQLParserResult** result, yyscan_t scanner, const ch
 %token LEFT LIKE LOAD NULL PART PLAN SHOW TEXT THEN TIME CHAR
 %token VIEW WHEN WITH ADD ALL AND ASC CSV END FOR INT KEY
 %token NOT OFF SET TBL TOP AS BY IF IN IS OF ON OR TO
+%token QUIT
 
 /*********************************
  ** Non-Terminal types (http://www.gnu.org/software/bison/manual/html_node/Type-Decl.html)
@@ -189,6 +192,8 @@ int yyerror(YYLTYPE* llocp, SQLParserResult** result, yyscan_t scanner, const ch
 %type <delete_stmt> delete_statement truncate_statement
 %type <update_stmt> update_statement
 %type <drop_stmt>	drop_statement
+%type <show_stmt>	show_statement
+%type <quit_stmt>	quit_statement
 %type <sval> 		table_name opt_alias alias file_path
 %type <bval> 		opt_not_exists opt_distinct
 %type <uval>		import_file_type opt_join_type column_type
@@ -274,6 +279,8 @@ preparable_statement:
 	|	update_statement { $$ = $1; }
 	|	drop_statement { $$ = $1; }
 	|	execute_statement { $$ = $1; }
+	|	show_statement	{ $$ = $1; }
+	|	quit_statement	{ $$ = $1; }
 	;
 
 
@@ -630,6 +637,35 @@ opt_limit:
 	|	/* empty */ { $$ = NULL; }
 	;
 
+	
+/******************************
+ * SHOW Statement
+ * SHOW TABLE students
+ * SHOW TABLES
+ ******************************/
+show_statement:
+		SHOW TABLE table_name {
+			$$ = new ShowStatement(ShowStatement::kTable);
+			$$->tableName = $3;
+		}
+	|	SHOW TABLES {
+			$$ = new ShowStatement(ShowStatement::kSchema);
+		}
+	;
+	
+	
+	
+/******************************
+ * QUIT Statement
+ * QUIT
+ ******************************/
+quit_statement:
+		QUIT {
+			$$ = new QuitStatement();
+		}
+	;
+	
+	
 /******************************
  * Expressions 
  ******************************/

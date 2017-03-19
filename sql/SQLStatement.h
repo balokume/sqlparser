@@ -18,7 +18,9 @@ namespace hsql {
     kStmtExecute,
     kStmtExport,
     kStmtRename,
-    kStmtAlter
+    kStmtAlter,
+    kStmtShow,
+    kStmtQuit,
   };
 
   /**

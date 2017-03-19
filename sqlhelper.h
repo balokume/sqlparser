@@ -20,6 +20,12 @@ namespace hsql {
   // Prints a summary of the given CreateStatement with the given indentation.
   void printCreateStatementInfo(const CreateStatement* stmt, uintmax_t num_indent);
 
+  // Prints a summary of the given ShowStatement with the given indentation.
+  void printShowStatementInfo(const ShowStatement* stmt, uintmax_t num_indent);
+
+  // Prints a summary of the given QuitStatement with the given indentation.
+  void printQuitStatementInfo(const QuitStatement* stmt, uintmax_t num_indent);
+
   // Prints a summary of the given Expression with the given indentation.
   void printExpression(Expr* expr, uintmax_t num_indent);
 
