@@ -211,6 +211,7 @@ int yyerror(YYLTYPE* llocp, SQLParserResult** result, yyscan_t scanner, const ch
 %type <order_vec>	opt_order order_list
 %type <update_vec>	update_clause_commalist
 %type <column_vec>	column_def_commalist
+%type <sval> 		opt_primary_key
 
 /******************************
  ** Token Precedence and Associativity
@@ -337,11 +338,26 @@ create_statement:
 			$$->tableName = $4;
 			$$->filePath = $8;
 		}
-	|	CREATE TABLE opt_not_exists table_name '(' column_def_commalist ')' {
+	|	CREATE TABLE opt_not_exists table_name '(' column_def_commalist opt_primary_key ')'  {
 			$$ = new CreateStatement(CreateStatement::kTable);
 			$$->ifNotExists = $3;
 			$$->tableName = $4;
 			$$->columns = $6;
+			if(strcmp($7, "") != 0){
+				bool found = false;
+				for(int i = 0; i < $$->columns->size(); i++){
+					if(strcmp((*$$->columns)[i]->name, $7) == 0){
+						$$->primaryKey = (*$$->columns)[i];
+						found = true;
+						break;
+					}
+				}
+				if(!found){
+					std::string err  = "Key column '" + std::string($7) + "' doesn't exist in table";
+					yyerror(&yylloc, result, scanner, err.c_str());
+					YYERROR;
+				}
+			}
 		}
 	|	CREATE VIEW opt_not_exists table_name opt_column_list AS select_statement {
 			$$ = new CreateStatement(CreateStatement::kView);
@@ -355,6 +371,11 @@ create_statement:
 opt_not_exists:
 		IF NOT EXISTS { $$ = true; }
 	|	/* empty */ { $$ = false; }
+	;
+	
+opt_primary_key:
+		',' PRIMARY KEY '(' IDENTIFIER ')' { $$ = $5; }
+	|	/* empty */ {$$ = "";}
 	;
 
 column_def_commalist:

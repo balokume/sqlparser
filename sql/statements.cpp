@@ -31,6 +31,7 @@ namespace hsql {
     filePath(NULL),
     tableName(NULL),
     columns(NULL),
+    primaryKey(NULL),
     viewColumns(NULL),
     select(NULL) {};
 

@@ -169,6 +169,8 @@ namespace hsql {
         inprint(col_def->name, std::to_string(col_def->size).c_str(), numIndent + 2);
       }
     }
+    if(stmt->primaryKey != NULL)
+        inprint("primary key", stmt->primaryKey->name, numIndent + 1);
   }
 
   void printInsertStatementInfo(const InsertStatement* stmt, uintmax_t numIndent) {
