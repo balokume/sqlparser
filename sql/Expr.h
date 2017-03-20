@@ -55,7 +55,8 @@ namespace hsql {
       NOT,
       UMINUS,
       ISNULL,
-      EXISTS
+      EXISTS,
+      SUM
     };
 
 
@@ -136,6 +137,8 @@ namespace hsql {
     static Expr* makeInOperator(Expr* expr, std::vector<Expr*>* exprList);
 
     static Expr* makeInOperator(Expr* expr, SelectStatement* select);
+
+    static Expr* makeSumOperator(Expr* expr);
   };
 
 // Zero initializes an Expr object and assigns it to a space in the heap

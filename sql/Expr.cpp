@@ -154,6 +154,14 @@ namespace hsql {
     return e;
   }
 
+  Expr* Expr::makeSumOperator(Expr* expr) {
+    Expr* e = new Expr(kExprOperator);
+    e->opType = SUM;
+    e->expr = expr;
+
+    return e;
+  }
+
   bool Expr::isType(ExprType e_type) {
     return e_type == type;
   }

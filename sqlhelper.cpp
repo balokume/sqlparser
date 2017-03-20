@@ -75,6 +75,9 @@ namespace hsql {
     case Expr::NOT:
       inprint("NOT", numIndent);
       break;
+    case Expr::SUM:
+      inprint("SUM", numIndent);
+      break;
     default:
       inprintU(expr->opType, numIndent);
       break;

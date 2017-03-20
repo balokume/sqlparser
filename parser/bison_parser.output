@@ -210,154 +210,157 @@ Grammar
    97     | exists_expr
    98     | case_expr
    99     | in_expr
+  100     | sum_expr
 
-  100 operand: '(' expr ')'
-  101        | scalar_expr
-  102        | unary_expr
-  103        | binary_expr
-  104        | function_expr
-  105        | '(' select_no_paren ')'
+  101 operand: '(' expr ')'
+  102        | scalar_expr
+  103        | unary_expr
+  104        | binary_expr
+  105        | function_expr
+  106        | '(' select_no_paren ')'
 
-  106 scalar_expr: column_name
-  107            | star_expr
-  108            | literal
+  107 scalar_expr: column_name
+  108            | star_expr
+  109            | literal
 
-  109 unary_expr: '-' operand
-  110           | NOT operand
+  110 unary_expr: '-' operand
+  111           | NOT operand
 
-  111 binary_expr: comp_expr
-  112            | operand '-' operand
-  113            | operand '+' operand
-  114            | operand '/' operand
-  115            | operand '*' operand
-  116            | operand '%' operand
-  117            | operand '^' operand
-  118            | operand LIKE operand
-  119            | operand NOT LIKE operand
+  112 binary_expr: comp_expr
+  113            | operand '-' operand
+  114            | operand '+' operand
+  115            | operand '/' operand
+  116            | operand '*' operand
+  117            | operand '%' operand
+  118            | operand '^' operand
+  119            | operand LIKE operand
+  120            | operand NOT LIKE operand
 
-  120 logic_expr: expr AND expr
-  121           | expr OR expr
+  121 logic_expr: expr AND expr
+  122           | expr OR expr
 
-  122 in_expr: operand IN '(' expr_list ')'
-  123        | operand NOT IN '(' expr_list ')'
-  124        | operand IN '(' select_no_paren ')'
-  125        | operand NOT IN '(' select_no_paren ')'
+  123 in_expr: operand IN '(' expr_list ')'
+  124        | operand NOT IN '(' expr_list ')'
+  125        | operand IN '(' select_no_paren ')'
+  126        | operand NOT IN '(' select_no_paren ')'
 
-  126 case_expr: CASE WHEN expr THEN operand ELSE operand END
+  127 sum_expr: SUM '(' expr ')'
 
-  127 exists_expr: EXISTS '(' select_no_paren ')'
-  128            | NOT EXISTS '(' select_no_paren ')'
+  128 case_expr: CASE WHEN expr THEN operand ELSE operand END
 
-  129 comp_expr: operand '=' operand
-  130          | operand NOTEQUALS operand
-  131          | operand '<' operand
-  132          | operand '>' operand
-  133          | operand LESSEQ operand
-  134          | operand GREATEREQ operand
+  129 exists_expr: EXISTS '(' select_no_paren ')'
+  130            | NOT EXISTS '(' select_no_paren ')'
 
-  135 function_expr: IDENTIFIER '(' opt_distinct expr_list ')'
+  131 comp_expr: operand '=' operand
+  132          | operand NOTEQUALS operand
+  133          | operand '<' operand
+  134          | operand '>' operand
+  135          | operand LESSEQ operand
+  136          | operand GREATEREQ operand
 
-  136 between_expr: operand BETWEEN operand AND operand
+  137 function_expr: IDENTIFIER '(' opt_distinct expr_list ')'
 
-  137 column_name: IDENTIFIER
-  138            | IDENTIFIER '.' IDENTIFIER
+  138 between_expr: operand BETWEEN operand AND operand
 
-  139 literal: string_literal
-  140        | num_literal
-  141        | placeholder_expr
+  139 column_name: IDENTIFIER
+  140            | IDENTIFIER '.' IDENTIFIER
 
-  142 string_literal: STRING
+  141 literal: string_literal
+  142        | num_literal
+  143        | placeholder_expr
 
-  143 num_literal: FLOATVAL
-  144            | int_literal
+  144 string_literal: STRING
 
-  145 int_literal: INTVAL
+  145 num_literal: FLOATVAL
+  146            | int_literal
 
-  146 star_expr: '*'
+  147 int_literal: INTVAL
 
-  147 placeholder_expr: '?'
+  148 star_expr: '*'
 
-  148 table_ref: table_ref_atomic
-  149          | table_ref_atomic ',' table_ref_commalist
+  149 placeholder_expr: '?'
 
-  150 table_ref_atomic: table_ref_name
-  151                 | '(' select_statement ')' opt_alias
-  152                 | join_clause
+  150 table_ref: table_ref_atomic
+  151          | table_ref_atomic ',' table_ref_commalist
 
-  153 table_ref_commalist: table_ref_atomic
-  154                    | table_ref_commalist ',' table_ref_atomic
+  152 table_ref_atomic: table_ref_name
+  153                 | '(' select_statement ')' opt_alias
+  154                 | join_clause
 
-  155 table_ref_name: table_name opt_alias
+  155 table_ref_commalist: table_ref_atomic
+  156                    | table_ref_commalist ',' table_ref_atomic
 
-  156 table_ref_name_no_alias: table_name
+  157 table_ref_name: table_name opt_alias
 
-  157 table_name: IDENTIFIER
-  158           | IDENTIFIER '.' IDENTIFIER
+  158 table_ref_name_no_alias: table_name
 
-  159 alias: AS IDENTIFIER
-  160      | IDENTIFIER
+  159 table_name: IDENTIFIER
+  160           | IDENTIFIER '.' IDENTIFIER
 
-  161 opt_alias: alias
-  162          | %empty
+  161 alias: AS IDENTIFIER
+  162      | IDENTIFIER
 
-  163 join_clause: join_table opt_join_type JOIN join_table ON join_condition
+  163 opt_alias: alias
+  164          | %empty
 
-  164 opt_join_type: INNER
-  165              | OUTER
-  166              | LEFT OUTER
-  167              | RIGHT OUTER
-  168              | LEFT
-  169              | RIGHT
-  170              | CROSS
-  171              | NATURAL
-  172              | %empty
+  165 join_clause: join_table opt_join_type JOIN join_table ON join_condition
 
-  173 join_table: '(' select_statement ')' alias
-  174           | table_ref_name
+  166 opt_join_type: INNER
+  167              | OUTER
+  168              | LEFT OUTER
+  169              | RIGHT OUTER
+  170              | LEFT
+  171              | RIGHT
+  172              | CROSS
+  173              | NATURAL
+  174              | %empty
 
-  175 join_condition: expr
+  175 join_table: '(' select_statement ')' alias
+  176           | table_ref_name
 
-  176 opt_semicolon: ';'
-  177              | %empty
+  177 join_condition: expr
 
-  178 ident_commalist: IDENTIFIER
-  179                | ident_commalist ',' IDENTIFIER
+  178 opt_semicolon: ';'
+  179              | %empty
+
+  180 ident_commalist: IDENTIFIER
+  181                | ident_commalist ',' IDENTIFIER
 
 
 Terminals, with rules where they appear
 
 $end (0) 0
-'%' (37) 116
-'(' (40) 20 25 29 34 44 46 54 55 100 105 122 123 124 125 127 128 135
-    151 173
-')' (41) 20 25 29 34 44 46 54 55 100 105 122 123 124 125 127 128 135
-    151 173
-'*' (42) 115 146
-'+' (43) 113
-',' (44) 29 32 50 76 90 92 149 154 179
-'-' (45) 109 112
-'.' (46) 138 158
-'/' (47) 114
+'%' (37) 117
+'(' (40) 20 25 29 34 44 46 54 55 101 106 123 124 125 126 127 129 130
+    137 153 175
+')' (41) 20 25 29 34 44 46 54 55 101 106 123 124 125 126 127 129 130
+    137 153 175
+'*' (42) 116 148
+'+' (43) 114
+',' (44) 29 32 50 76 90 92 151 156 181
+'-' (45) 110 113
+'.' (46) 140 160
+'/' (47) 115
 ':' (58) 17
-';' (59) 3 176
-'<' (60) 131
-'=' (61) 51 129
-'>' (62) 132
-'?' (63) 147
+';' (59) 3 178
+'<' (60) 133
+'=' (61) 51 131
+'>' (62) 134
+'?' (63) 149
 '[' (91)
 ']' (93)
-'^' (94) 117
+'^' (94) 118
 '{' (123) 18
 '}' (125) 18
 error (256)
-IDENTIFIER (258) 17 18 19 20 29 33 34 41 51 135 137 138 157 158 159
-    160 178 179
-STRING (259) 142
-FLOATVAL (260) 143
-INTVAL (261) 34 145
-NOTEQUALS (262) 130
-LESSEQ (263) 133
-GREATEREQ (264) 134
+IDENTIFIER (258) 17 18 19 20 29 33 34 41 51 137 139 140 159 160 161
+    162 180 181
+STRING (259) 144
+FLOATVAL (260) 145
+INTVAL (261) 34 147
+NOTEQUALS (262) 132
+LESSEQ (263) 135
+GREATEREQ (264) 136
 DEALLOCATE (265) 41
 PARAMETERS (266)
 INTERSECT (267) 60
@@ -368,7 +371,7 @@ NVARCHAR (271)
 RESTRICT (272)
 TRUNCATE (273) 43
 ANALYZE (274)
-BETWEEN (275) 136
+BETWEEN (275) 138
 CASCADE (276)
 COLUMNS (277)
 CONTROL (278)
@@ -377,7 +380,7 @@ EXECUTE (280) 19 20
 EXPLAIN (281)
 HISTORY (282)
 INTEGER (283) 36
-NATURAL (284) 171
+NATURAL (284) 173
 PREPARE (285) 17 18 41
 PRIMARY (286) 29
 SCHEMAS (287)
@@ -391,7 +394,7 @@ DIRECT (294)
 DOUBLE (295) 37
 ESCAPE (296)
 EXCEPT (297) 61
-EXISTS (298) 27 127 128
+EXISTS (298) 27 129 130
 GLOBAL (299)
 HAVING (300) 71
 IMPORT (301) 21
@@ -409,244 +412,247 @@ UPDATE (312) 48
 VALUES (313) 44
 AFTER (314)
 ALTER (315)
-CROSS (316) 170
+CROSS (316) 172
 DELTA (317)
 GROUP (318) 69
 INDEX (319)
-INNER (320) 164
+INNER (320) 166
 LIMIT (321) 83 84
 LOCAL (322)
 MERGE (323)
 MINUS (324)
 ORDER (325) 73
-OUTER (326) 165 166 167
-RIGHT (327) 167 169
+OUTER (326) 167 168 169
+RIGHT (327) 169 171
 TABLE (328) 24 25 39 86
 UNION (329) 59
 USING (330)
 WHERE (331) 67
 CALL (332)
-CASE (333) 126
+CASE (333) 128
 DATE (334)
 DESC (335) 79
 DROP (336) 39 40
-ELSE (337) 126
+ELSE (337) 128
 FILE (338) 21 24
 FROM (339) 21 24 42 66
 FULL (340)
 HASH (341)
 HINT (342)
 INTO (343) 21 44 45
-JOIN (344) 163
-LEFT (345) 166 168
-LIKE (346) 118 119
+JOIN (344) 165
+LEFT (345) 168 170
+LIKE (346) 119 120
 LOAD (347)
 NULL (348)
 PART (349)
 PLAN (350)
 SHOW (351) 86 87
 TEXT (352) 38
-THEN (353) 126
+THEN (353) 128
 TIME (354)
 CHAR (355)
 VIEW (356) 26 40
-WHEN (357) 126
+WHEN (357) 128
 WITH (358)
 ADD (359)
 ALL (360)
-AND (361) 120 136
+AND (361) 121 138
 ASC (362) 78
 CSV (363) 22
-END (364) 126
+END (364) 128
 FOR (365)
 INT (366) 35
 KEY (367) 29
-NOT (368) 27 110 119 123 125 128
+NOT (368) 27 111 120 124 126 130
 OFF (369)
 SET (370) 48
 TBL (371) 24
 TOP (372) 81
-AS (373) 26 159
+AS (373) 26 161
 BY (374) 69 73
 IF (375) 27
-IN (376) 122 123 124 125
+IN (376) 123 124 125 126
 IS (377)
 OF (378)
-ON (379) 163
-OR (380) 121
+ON (379) 165
+OR (380) 122
 TO (381)
 QUIT (382) 88
-EQUALS (383)
-LESS (384)
-GREATER (385)
-NOTNULL (386)
-UMINUS (387)
+SUM (383) 127
+EQUALS (384)
+LESS (385)
+GREATER (386)
+NOTNULL (387)
+UMINUS (388)
 
 
 Nonterminals, with rules where they appear
 
-$accept (153)
+$accept (154)
     on left: 0
-input (154)
+input (155)
     on left: 1, on right: 0
-statement_list (155)
+statement_list (156)
     on left: 2 3, on right: 1 3 18
-statement (156)
+statement (157)
     on left: 4 5, on right: 2 3
-preparable_statement (157)
+preparable_statement (158)
     on left: 6 7 8 9 10 11 12 13 14 15 16, on right: 5 17
-prepare_statement (158)
+prepare_statement (159)
     on left: 17 18, on right: 4
-execute_statement (159)
+execute_statement (160)
     on left: 19 20, on right: 14
-import_statement (160)
+import_statement (161)
     on left: 21, on right: 7
-import_file_type (161)
+import_file_type (162)
     on left: 22, on right: 21
-file_path (162)
+file_path (163)
     on left: 23, on right: 21 24
-create_statement (163)
+create_statement (164)
     on left: 24 25 26, on right: 8
-opt_not_exists (164)
+opt_not_exists (165)
     on left: 27 28, on right: 24 25 26
-opt_primary_key (165)
+opt_primary_key (166)
     on left: 29 30, on right: 25
-column_def_commalist (166)
+column_def_commalist (167)
     on left: 31 32, on right: 25 32
-column_def (167)
+column_def (168)
     on left: 33 34, on right: 31 32
-column_type (168)
+column_type (169)
     on left: 35 36 37 38, on right: 33 34
-drop_statement (169)
+drop_statement (170)
     on left: 39 40 41, on right: 13
-delete_statement (170)
+delete_statement (171)
     on left: 42, on right: 10
-truncate_statement (171)
+truncate_statement (172)
     on left: 43, on right: 11
-insert_statement (172)
+insert_statement (173)
     on left: 44 45, on right: 9
-opt_column_list (173)
+opt_column_list (174)
     on left: 46 47, on right: 26 44 45
-update_statement (174)
+update_statement (175)
     on left: 48, on right: 12
-update_clause_commalist (175)
+update_clause_commalist (176)
     on left: 49 50, on right: 48 50
-update_clause (176)
+update_clause (177)
     on left: 51, on right: 49 50
-select_statement (177)
-    on left: 52 53, on right: 6 26 151 173
-select_with_paren (178)
+select_statement (178)
+    on left: 52 53, on right: 6 26 153 175
+select_with_paren (179)
     on left: 54 55, on right: 52 55 58
-select_no_paren (179)
-    on left: 56 57 58, on right: 45 53 54 105 124 125 127 128
-set_operator (180)
+select_no_paren (180)
+    on left: 56 57 58, on right: 45 53 54 106 125 126 129 130
+set_operator (181)
     on left: 59 60 61, on right: 57 58
-select_clause (181)
+select_clause (182)
     on left: 62, on right: 56 57 58
-opt_distinct (182)
-    on left: 63 64, on right: 62 135
-select_list (183)
+opt_distinct (183)
+    on left: 63 64, on right: 62 137
+select_list (184)
     on left: 65, on right: 62
-from_clause (184)
+from_clause (185)
     on left: 66, on right: 62
-opt_where (185)
+opt_where (186)
     on left: 67 68, on right: 42 48 62
-opt_group (186)
+opt_group (187)
     on left: 69 70, on right: 62
-opt_having (187)
+opt_having (188)
     on left: 71 72, on right: 69
-opt_order (188)
+opt_order (189)
     on left: 73 74, on right: 56 57 58
-order_list (189)
+order_list (190)
     on left: 75 76, on right: 73 76
-order_desc (190)
+order_desc (191)
     on left: 77, on right: 75 76
-opt_order_type (191)
+opt_order_type (192)
     on left: 78 79 80, on right: 77
-opt_top (192)
+opt_top (193)
     on left: 81 82, on right: 62
-opt_limit (193)
+opt_limit (194)
     on left: 83 84 85, on right: 56 57 58
-show_statement (194)
+show_statement (195)
     on left: 86 87, on right: 15
-quit_statement (195)
+quit_statement (196)
     on left: 88, on right: 16
-expr_list (196)
-    on left: 89 90, on right: 65 69 90 122 123 135
-literal_list (197)
+expr_list (197)
+    on left: 89 90, on right: 65 69 90 123 124 137
+literal_list (198)
     on left: 91 92, on right: 20 44 92
-expr_alias (198)
+expr_alias (199)
     on left: 93, on right: 89 90
-expr (199)
-    on left: 94 95 96 97 98 99, on right: 67 71 77 93 100 120 121 126
-    175
-operand (200)
-    on left: 100 101 102 103 104 105, on right: 94 109 110 112 113
-    114 115 116 117 118 119 122 123 124 125 126 129 130 131 132 133
-    134 136
-scalar_expr (201)
-    on left: 106 107 108, on right: 101
-unary_expr (202)
-    on left: 109 110, on right: 102
-binary_expr (203)
-    on left: 111 112 113 114 115 116 117 118 119, on right: 103
-logic_expr (204)
-    on left: 120 121, on right: 96
-in_expr (205)
-    on left: 122 123 124 125, on right: 99
-case_expr (206)
-    on left: 126, on right: 98
-exists_expr (207)
-    on left: 127 128, on right: 97
-comp_expr (208)
-    on left: 129 130 131 132 133 134, on right: 111
-function_expr (209)
-    on left: 135, on right: 104
-between_expr (210)
-    on left: 136, on right: 95
-column_name (211)
-    on left: 137 138, on right: 106
-literal (212)
-    on left: 139 140 141, on right: 51 91 92 108
-string_literal (213)
-    on left: 142, on right: 23 139
-num_literal (214)
-    on left: 143 144, on right: 140
-int_literal (215)
-    on left: 145, on right: 81 83 84 144
-star_expr (216)
-    on left: 146, on right: 107
-placeholder_expr (217)
-    on left: 147, on right: 141
-table_ref (218)
-    on left: 148 149, on right: 66
-table_ref_atomic (219)
-    on left: 150 151 152, on right: 148 149 153 154
-table_ref_commalist (220)
-    on left: 153 154, on right: 149 154
-table_ref_name (221)
-    on left: 155, on right: 150 174
-table_ref_name_no_alias (222)
-    on left: 156, on right: 48
-table_name (223)
-    on left: 157 158, on right: 21 24 25 26 39 40 42 43 44 45 86 155
-    156
-alias (224)
-    on left: 159 160, on right: 161 173
-opt_alias (225)
-    on left: 161 162, on right: 93 151 155
-join_clause (226)
-    on left: 163, on right: 152
-opt_join_type (227)
-    on left: 164 165 166 167 168 169 170 171 172, on right: 163
-join_table (228)
-    on left: 173 174, on right: 163
-join_condition (229)
-    on left: 175, on right: 163
-opt_semicolon (230)
-    on left: 176 177, on right: 1 18
-ident_commalist (231)
-    on left: 178 179, on right: 46 179
+expr (200)
+    on left: 94 95 96 97 98 99 100, on right: 67 71 77 93 101 121 122
+    127 128 177
+operand (201)
+    on left: 101 102 103 104 105 106, on right: 94 110 111 113 114
+    115 116 117 118 119 120 123 124 125 126 128 131 132 133 134 135
+    136 138
+scalar_expr (202)
+    on left: 107 108 109, on right: 102
+unary_expr (203)
+    on left: 110 111, on right: 103
+binary_expr (204)
+    on left: 112 113 114 115 116 117 118 119 120, on right: 104
+logic_expr (205)
+    on left: 121 122, on right: 96
+in_expr (206)
+    on left: 123 124 125 126, on right: 99
+sum_expr (207)
+    on left: 127, on right: 100
+case_expr (208)
+    on left: 128, on right: 98
+exists_expr (209)
+    on left: 129 130, on right: 97
+comp_expr (210)
+    on left: 131 132 133 134 135 136, on right: 112
+function_expr (211)
+    on left: 137, on right: 105
+between_expr (212)
+    on left: 138, on right: 95
+column_name (213)
+    on left: 139 140, on right: 107
+literal (214)
+    on left: 141 142 143, on right: 51 91 92 109
+string_literal (215)
+    on left: 144, on right: 23 141
+num_literal (216)
+    on left: 145 146, on right: 142
+int_literal (217)
+    on left: 147, on right: 81 83 84 146
+star_expr (218)
+    on left: 148, on right: 108
+placeholder_expr (219)
+    on left: 149, on right: 143
+table_ref (220)
+    on left: 150 151, on right: 66
+table_ref_atomic (221)
+    on left: 152 153 154, on right: 150 151 155 156
+table_ref_commalist (222)
+    on left: 155 156, on right: 151 156
+table_ref_name (223)
+    on left: 157, on right: 152 176
+table_ref_name_no_alias (224)
+    on left: 158, on right: 48
+table_name (225)
+    on left: 159 160, on right: 21 24 25 26 39 40 42 43 44 45 86 157
+    158
+alias (226)
+    on left: 161 162, on right: 163 175
+opt_alias (227)
+    on left: 163 164, on right: 93 153 157
+join_clause (228)
+    on left: 165, on right: 154
+opt_join_type (229)
+    on left: 166 167 168 169 170 171 172 173 174, on right: 165
+join_table (230)
+    on left: 175 176, on right: 165
+join_condition (231)
+    on left: 177, on right: 165
+opt_semicolon (232)
+    on left: 178 179, on right: 1 18
+ident_commalist (233)
+    on left: 180 181, on right: 46 181
 
 
 State 0
@@ -826,7 +832,7 @@ State 16
 
     ';'  shift, and go to state 55
 
-    $default  reduce using rule 177 (opt_semicolon)
+    $default  reduce using rule 179 (opt_semicolon)
 
     opt_semicolon  go to state 56
 
@@ -969,12 +975,12 @@ State 34
 
 State 35
 
-  157 table_name: IDENTIFIER .
-  158           | IDENTIFIER . '.' IDENTIFIER
+  159 table_name: IDENTIFIER .
+  160           | IDENTIFIER . '.' IDENTIFIER
 
     '.'  shift, and go to state 64
 
-    $default  reduce using rule 157 (table_name)
+    $default  reduce using rule 159 (table_name)
 
 
 State 36
@@ -1083,9 +1089,9 @@ State 46
 
 State 47
 
-  156 table_ref_name_no_alias: table_name .
+  158 table_ref_name_no_alias: table_name .
 
-    $default  reduce using rule 156 (table_ref_name_no_alias)
+    $default  reduce using rule 158 (table_ref_name_no_alias)
 
 
 State 48
@@ -1146,7 +1152,7 @@ State 54
 State 55
 
     3 statement_list: statement_list ';' . statement
-  176 opt_semicolon: ';' .
+  178 opt_semicolon: ';' .
 
     DEALLOCATE  shift, and go to state 1
     TRUNCATE    shift, and go to state 2
@@ -1163,7 +1169,7 @@ State 55
     QUIT        shift, and go to state 13
     '('         shift, and go to state 14
 
-    $default  reduce using rule 176 (opt_semicolon)
+    $default  reduce using rule 178 (opt_semicolon)
 
     statement             go to state 85
     preparable_statement  go to state 18
@@ -1251,7 +1257,7 @@ State 63
 
 State 64
 
-  158 table_name: IDENTIFIER '.' . IDENTIFIER
+  160 table_name: IDENTIFIER '.' . IDENTIFIER
 
     IDENTIFIER  shift, and go to state 91
 
@@ -1412,9 +1418,9 @@ State 74
 
 State 75
 
-  145 int_literal: INTVAL .
+  147 int_literal: INTVAL .
 
-    $default  reduce using rule 145 (int_literal)
+    $default  reduce using rule 147 (int_literal)
 
 
 State 76
@@ -1442,32 +1448,34 @@ State 78
     EXISTS      shift, and go to state 112
     CASE        shift, and go to state 113
     NOT         shift, and go to state 114
-    '-'         shift, and go to state 115
-    '*'         shift, and go to state 116
-    '('         shift, and go to state 117
+    SUM         shift, and go to state 115
+    '-'         shift, and go to state 116
+    '*'         shift, and go to state 117
+    '('         shift, and go to state 118
     '?'         shift, and go to state 94
 
-    select_list       go to state 118
-    expr_list         go to state 119
-    expr_alias        go to state 120
-    expr              go to state 121
-    operand           go to state 122
-    scalar_expr       go to state 123
-    unary_expr        go to state 124
-    binary_expr       go to state 125
-    logic_expr        go to state 126
-    in_expr           go to state 127
-    case_expr         go to state 128
-    exists_expr       go to state 129
-    comp_expr         go to state 130
-    function_expr     go to state 131
-    between_expr      go to state 132
-    column_name       go to state 133
-    literal           go to state 134
+    select_list       go to state 119
+    expr_list         go to state 120
+    expr_alias        go to state 121
+    expr              go to state 122
+    operand           go to state 123
+    scalar_expr       go to state 124
+    unary_expr        go to state 125
+    binary_expr       go to state 126
+    logic_expr        go to state 127
+    in_expr           go to state 128
+    sum_expr          go to state 129
+    case_expr         go to state 130
+    exists_expr       go to state 131
+    comp_expr         go to state 132
+    function_expr     go to state 133
+    between_expr      go to state 134
+    column_name       go to state 135
+    literal           go to state 136
     string_literal    go to state 97
     num_literal       go to state 98
     int_literal       go to state 99
-    star_expr         go to state 135
+    star_expr         go to state 137
     placeholder_expr  go to state 100
 
 
@@ -1475,10 +1483,10 @@ State 79
 
    48 update_statement: UPDATE table_ref_name_no_alias SET . update_clause_commalist opt_where
 
-    IDENTIFIER  shift, and go to state 136
+    IDENTIFIER  shift, and go to state 138
 
-    update_clause_commalist  go to state 137
-    update_clause            go to state 138
+    update_clause_commalist  go to state 139
+    update_clause            go to state 140
 
 
 State 80
@@ -1534,31 +1542,33 @@ State 86
     EXISTS      shift, and go to state 112
     CASE        shift, and go to state 113
     NOT         shift, and go to state 114
-    '-'         shift, and go to state 115
-    '*'         shift, and go to state 116
-    '('         shift, and go to state 117
+    SUM         shift, and go to state 115
+    '-'         shift, and go to state 116
+    '*'         shift, and go to state 117
+    '('         shift, and go to state 118
     '?'         shift, and go to state 94
 
-    order_list        go to state 139
-    order_desc        go to state 140
-    expr              go to state 141
-    operand           go to state 122
-    scalar_expr       go to state 123
-    unary_expr        go to state 124
-    binary_expr       go to state 125
-    logic_expr        go to state 126
-    in_expr           go to state 127
-    case_expr         go to state 128
-    exists_expr       go to state 129
-    comp_expr         go to state 130
-    function_expr     go to state 131
-    between_expr      go to state 132
-    column_name       go to state 133
-    literal           go to state 134
+    order_list        go to state 141
+    order_desc        go to state 142
+    expr              go to state 143
+    operand           go to state 123
+    scalar_expr       go to state 124
+    unary_expr        go to state 125
+    binary_expr       go to state 126
+    logic_expr        go to state 127
+    in_expr           go to state 128
+    sum_expr          go to state 129
+    case_expr         go to state 130
+    exists_expr       go to state 131
+    comp_expr         go to state 132
+    function_expr     go to state 133
+    between_expr      go to state 134
+    column_name       go to state 135
+    literal           go to state 136
     string_literal    go to state 97
     num_literal       go to state 98
     int_literal       go to state 99
-    star_expr         go to state 135
+    star_expr         go to state 137
     placeholder_expr  go to state 100
 
 
@@ -1570,7 +1580,7 @@ State 87
 
     $default  reduce using rule 74 (opt_order)
 
-    opt_order  go to state 142
+    opt_order  go to state 144
 
 
 State 88
@@ -1581,7 +1591,7 @@ State 88
 
     $default  reduce using rule 74 (opt_order)
 
-    opt_order  go to state 143
+    opt_order  go to state 145
 
 
 State 89
@@ -1591,7 +1601,7 @@ State 89
 
     INTVAL  shift, and go to state 75
 
-    int_literal  go to state 144
+    int_literal  go to state 146
 
 
 State 90
@@ -1603,30 +1613,30 @@ State 90
 
 State 91
 
-  158 table_name: IDENTIFIER '.' IDENTIFIER .
+  160 table_name: IDENTIFIER '.' IDENTIFIER .
 
-    $default  reduce using rule 158 (table_name)
+    $default  reduce using rule 160 (table_name)
 
 
 State 92
 
-  142 string_literal: STRING .
+  144 string_literal: STRING .
 
-    $default  reduce using rule 142 (string_literal)
+    $default  reduce using rule 144 (string_literal)
 
 
 State 93
 
-  143 num_literal: FLOATVAL .
+  145 num_literal: FLOATVAL .
 
-    $default  reduce using rule 143 (num_literal)
+    $default  reduce using rule 145 (num_literal)
 
 
 State 94
 
-  147 placeholder_expr: '?' .
+  149 placeholder_expr: '?' .
 
-    $default  reduce using rule 147 (placeholder_expr)
+    $default  reduce using rule 149 (placeholder_expr)
 
 
 State 95
@@ -1634,8 +1644,8 @@ State 95
    20 execute_statement: EXECUTE IDENTIFIER '(' literal_list . ')'
    92 literal_list: literal_list . ',' literal
 
-    ')'  shift, and go to state 145
-    ','  shift, and go to state 146
+    ')'  shift, and go to state 147
+    ','  shift, and go to state 148
 
 
 State 96
@@ -1647,30 +1657,30 @@ State 96
 
 State 97
 
-  139 literal: string_literal .
+  141 literal: string_literal .
 
-    $default  reduce using rule 139 (literal)
+    $default  reduce using rule 141 (literal)
 
 
 State 98
 
-  140 literal: num_literal .
+  142 literal: num_literal .
 
-    $default  reduce using rule 140 (literal)
+    $default  reduce using rule 142 (literal)
 
 
 State 99
 
-  144 num_literal: int_literal .
+  146 num_literal: int_literal .
 
-    $default  reduce using rule 144 (num_literal)
+    $default  reduce using rule 146 (num_literal)
 
 
 State 100
 
-  141 literal: placeholder_expr .
+  143 literal: placeholder_expr .
 
-    $default  reduce using rule 141 (literal)
+    $default  reduce using rule 143 (literal)
 
 
 State 101
@@ -1687,16 +1697,16 @@ State 102
 
     ';'  shift, and go to state 55
 
-    $default  reduce using rule 177 (opt_semicolon)
+    $default  reduce using rule 179 (opt_semicolon)
 
-    opt_semicolon  go to state 147
+    opt_semicolon  go to state 149
 
 
 State 103
 
    27 opt_not_exists: IF NOT . EXISTS
 
-    EXISTS  shift, and go to state 148
+    EXISTS  shift, and go to state 150
 
 
 State 104
@@ -1704,8 +1714,8 @@ State 104
    24 create_statement: CREATE TABLE opt_not_exists table_name . FROM TBL FILE file_path
    25                 | CREATE TABLE opt_not_exists table_name . '(' column_def_commalist opt_primary_key ')'
 
-    FROM  shift, and go to state 149
-    '('   shift, and go to state 150
+    FROM  shift, and go to state 151
+    '('   shift, and go to state 152
 
 
 State 105
@@ -1716,7 +1726,7 @@ State 105
 
     $default  reduce using rule 47 (opt_column_list)
 
-    opt_column_list  go to state 151
+    opt_column_list  go to state 153
 
 
 State 106
@@ -1730,29 +1740,31 @@ State 106
     EXISTS      shift, and go to state 112
     CASE        shift, and go to state 113
     NOT         shift, and go to state 114
-    '-'         shift, and go to state 115
-    '*'         shift, and go to state 116
-    '('         shift, and go to state 117
+    SUM         shift, and go to state 115
+    '-'         shift, and go to state 116
+    '*'         shift, and go to state 117
+    '('         shift, and go to state 118
     '?'         shift, and go to state 94
 
-    expr              go to state 152
-    operand           go to state 122
-    scalar_expr       go to state 123
-    unary_expr        go to state 124
-    binary_expr       go to state 125
-    logic_expr        go to state 126
-    in_expr           go to state 127
-    case_expr         go to state 128
-    exists_expr       go to state 129
-    comp_expr         go to state 130
-    function_expr     go to state 131
-    between_expr      go to state 132
-    column_name       go to state 133
-    literal           go to state 134
+    expr              go to state 154
+    operand           go to state 123
+    scalar_expr       go to state 124
+    unary_expr        go to state 125
+    binary_expr       go to state 126
+    logic_expr        go to state 127
+    in_expr           go to state 128
+    sum_expr          go to state 129
+    case_expr         go to state 130
+    exists_expr       go to state 131
+    comp_expr         go to state 132
+    function_expr     go to state 133
+    between_expr      go to state 134
+    column_name       go to state 135
+    literal           go to state 136
     string_literal    go to state 97
     num_literal       go to state 98
     int_literal       go to state 99
-    star_expr         go to state 135
+    star_expr         go to state 137
     placeholder_expr  go to state 100
 
 
@@ -1769,17 +1781,17 @@ State 108
 
     STRING  shift, and go to state 92
 
-    file_path       go to state 153
-    string_literal  go to state 154
+    file_path       go to state 155
+    string_literal  go to state 156
 
 
 State 109
 
    46 opt_column_list: '(' . ident_commalist ')'
 
-    IDENTIFIER  shift, and go to state 155
+    IDENTIFIER  shift, and go to state 157
 
-    ident_commalist  go to state 156
+    ident_commalist  go to state 158
 
 
 State 110
@@ -1788,109 +1800,116 @@ State 110
    45                 | INSERT INTO table_name opt_column_list . select_no_paren
 
     SELECT  shift, and go to state 9
-    VALUES  shift, and go to state 157
+    VALUES  shift, and go to state 159
 
-    select_no_paren  go to state 158
+    select_no_paren  go to state 160
     select_clause    go to state 31
 
 
 State 111
 
-  135 function_expr: IDENTIFIER . '(' opt_distinct expr_list ')'
-  137 column_name: IDENTIFIER .
-  138            | IDENTIFIER . '.' IDENTIFIER
+  137 function_expr: IDENTIFIER . '(' opt_distinct expr_list ')'
+  139 column_name: IDENTIFIER .
+  140            | IDENTIFIER . '.' IDENTIFIER
 
-    '('  shift, and go to state 159
-    '.'  shift, and go to state 160
+    '('  shift, and go to state 161
+    '.'  shift, and go to state 162
 
-    $default  reduce using rule 137 (column_name)
+    $default  reduce using rule 139 (column_name)
 
 
 State 112
 
-  127 exists_expr: EXISTS . '(' select_no_paren ')'
+  129 exists_expr: EXISTS . '(' select_no_paren ')'
 
-    '('  shift, and go to state 161
+    '('  shift, and go to state 163
 
 
 State 113
 
-  126 case_expr: CASE . WHEN expr THEN operand ELSE operand END
+  128 case_expr: CASE . WHEN expr THEN operand ELSE operand END
 
-    WHEN  shift, and go to state 162
+    WHEN  shift, and go to state 164
 
 
 State 114
 
-  110 unary_expr: NOT . operand
-  128 exists_expr: NOT . EXISTS '(' select_no_paren ')'
+  111 unary_expr: NOT . operand
+  130 exists_expr: NOT . EXISTS '(' select_no_paren ')'
 
     IDENTIFIER  shift, and go to state 111
     STRING      shift, and go to state 92
     FLOATVAL    shift, and go to state 93
     INTVAL      shift, and go to state 75
-    EXISTS      shift, and go to state 163
-    NOT         shift, and go to state 164
-    '-'         shift, and go to state 115
-    '*'         shift, and go to state 116
-    '('         shift, and go to state 117
+    EXISTS      shift, and go to state 165
+    NOT         shift, and go to state 166
+    '-'         shift, and go to state 116
+    '*'         shift, and go to state 117
+    '('         shift, and go to state 118
     '?'         shift, and go to state 94
 
-    operand           go to state 165
-    scalar_expr       go to state 123
-    unary_expr        go to state 124
-    binary_expr       go to state 125
-    comp_expr         go to state 130
-    function_expr     go to state 131
-    column_name       go to state 133
-    literal           go to state 134
+    operand           go to state 167
+    scalar_expr       go to state 124
+    unary_expr        go to state 125
+    binary_expr       go to state 126
+    comp_expr         go to state 132
+    function_expr     go to state 133
+    column_name       go to state 135
+    literal           go to state 136
     string_literal    go to state 97
     num_literal       go to state 98
     int_literal       go to state 99
-    star_expr         go to state 135
+    star_expr         go to state 137
     placeholder_expr  go to state 100
 
 
 State 115
 
-  109 unary_expr: '-' . operand
+  127 sum_expr: SUM . '(' expr ')'
+
+    '('  shift, and go to state 168
+
+
+State 116
+
+  110 unary_expr: '-' . operand
 
     IDENTIFIER  shift, and go to state 111
     STRING      shift, and go to state 92
     FLOATVAL    shift, and go to state 93
     INTVAL      shift, and go to state 75
-    NOT         shift, and go to state 164
-    '-'         shift, and go to state 115
-    '*'         shift, and go to state 116
-    '('         shift, and go to state 117
+    NOT         shift, and go to state 166
+    '-'         shift, and go to state 116
+    '*'         shift, and go to state 117
+    '('         shift, and go to state 118
     '?'         shift, and go to state 94
 
-    operand           go to state 166
-    scalar_expr       go to state 123
-    unary_expr        go to state 124
-    binary_expr       go to state 125
-    comp_expr         go to state 130
-    function_expr     go to state 131
-    column_name       go to state 133
-    literal           go to state 134
+    operand           go to state 169
+    scalar_expr       go to state 124
+    unary_expr        go to state 125
+    binary_expr       go to state 126
+    comp_expr         go to state 132
+    function_expr     go to state 133
+    column_name       go to state 135
+    literal           go to state 136
     string_literal    go to state 97
     num_literal       go to state 98
     int_literal       go to state 99
-    star_expr         go to state 135
+    star_expr         go to state 137
     placeholder_expr  go to state 100
-
-
-State 116
-
-  146 star_expr: '*' .
-
-    $default  reduce using rule 146 (star_expr)
 
 
 State 117
 
-  100 operand: '(' . expr ')'
-  105        | '(' . select_no_paren ')'
+  148 star_expr: '*' .
+
+    $default  reduce using rule 148 (star_expr)
+
+
+State 118
+
+  101 operand: '(' . expr ')'
+  106        | '(' . select_no_paren ')'
 
     IDENTIFIER  shift, and go to state 111
     STRING      shift, and go to state 92
@@ -1900,272 +1919,281 @@ State 117
     SELECT      shift, and go to state 9
     CASE        shift, and go to state 113
     NOT         shift, and go to state 114
-    '-'         shift, and go to state 115
-    '*'         shift, and go to state 116
-    '('         shift, and go to state 117
+    SUM         shift, and go to state 115
+    '-'         shift, and go to state 116
+    '*'         shift, and go to state 117
+    '('         shift, and go to state 118
     '?'         shift, and go to state 94
 
-    select_no_paren   go to state 167
+    select_no_paren   go to state 170
     select_clause     go to state 31
-    expr              go to state 168
-    operand           go to state 122
-    scalar_expr       go to state 123
-    unary_expr        go to state 124
-    binary_expr       go to state 125
-    logic_expr        go to state 126
-    in_expr           go to state 127
-    case_expr         go to state 128
-    exists_expr       go to state 129
-    comp_expr         go to state 130
-    function_expr     go to state 131
-    between_expr      go to state 132
-    column_name       go to state 133
-    literal           go to state 134
+    expr              go to state 171
+    operand           go to state 123
+    scalar_expr       go to state 124
+    unary_expr        go to state 125
+    binary_expr       go to state 126
+    logic_expr        go to state 127
+    in_expr           go to state 128
+    sum_expr          go to state 129
+    case_expr         go to state 130
+    exists_expr       go to state 131
+    comp_expr         go to state 132
+    function_expr     go to state 133
+    between_expr      go to state 134
+    column_name       go to state 135
+    literal           go to state 136
     string_literal    go to state 97
     num_literal       go to state 98
     int_literal       go to state 99
-    star_expr         go to state 135
+    star_expr         go to state 137
     placeholder_expr  go to state 100
-
-
-State 118
-
-   62 select_clause: SELECT opt_top opt_distinct select_list . from_clause opt_where opt_group
-
-    FROM  shift, and go to state 169
-
-    from_clause  go to state 170
 
 
 State 119
 
+   62 select_clause: SELECT opt_top opt_distinct select_list . from_clause opt_where opt_group
+
+    FROM  shift, and go to state 172
+
+    from_clause  go to state 173
+
+
+State 120
+
    65 select_list: expr_list .
    90 expr_list: expr_list . ',' expr_alias
 
-    ','  shift, and go to state 171
+    ','  shift, and go to state 174
 
     $default  reduce using rule 65 (select_list)
 
 
-State 120
+State 121
 
    89 expr_list: expr_alias .
 
     $default  reduce using rule 89 (expr_list)
 
 
-State 121
-
-   93 expr_alias: expr . opt_alias
-  120 logic_expr: expr . AND expr
-  121           | expr . OR expr
-
-    IDENTIFIER  shift, and go to state 172
-    AND         shift, and go to state 173
-    AS          shift, and go to state 174
-    OR          shift, and go to state 175
-
-    $default  reduce using rule 162 (opt_alias)
-
-    alias      go to state 176
-    opt_alias  go to state 177
-
-
 State 122
 
-   94 expr: operand .
-  112 binary_expr: operand . '-' operand
-  113            | operand . '+' operand
-  114            | operand . '/' operand
-  115            | operand . '*' operand
-  116            | operand . '%' operand
-  117            | operand . '^' operand
-  118            | operand . LIKE operand
-  119            | operand . NOT LIKE operand
-  122 in_expr: operand . IN '(' expr_list ')'
-  123        | operand . NOT IN '(' expr_list ')'
-  124        | operand . IN '(' select_no_paren ')'
-  125        | operand . NOT IN '(' select_no_paren ')'
-  129 comp_expr: operand . '=' operand
-  130          | operand . NOTEQUALS operand
-  131          | operand . '<' operand
-  132          | operand . '>' operand
-  133          | operand . LESSEQ operand
-  134          | operand . GREATEREQ operand
-  136 between_expr: operand . BETWEEN operand AND operand
+   93 expr_alias: expr . opt_alias
+  121 logic_expr: expr . AND expr
+  122           | expr . OR expr
 
-    NOTEQUALS  shift, and go to state 178
-    LESSEQ     shift, and go to state 179
-    GREATEREQ  shift, and go to state 180
-    BETWEEN    shift, and go to state 181
-    LIKE       shift, and go to state 182
-    NOT        shift, and go to state 183
-    IN         shift, and go to state 184
-    '='        shift, and go to state 185
-    '<'        shift, and go to state 186
-    '>'        shift, and go to state 187
-    '+'        shift, and go to state 188
-    '-'        shift, and go to state 189
-    '*'        shift, and go to state 190
-    '/'        shift, and go to state 191
-    '%'        shift, and go to state 192
-    '^'        shift, and go to state 193
+    IDENTIFIER  shift, and go to state 175
+    AND         shift, and go to state 176
+    AS          shift, and go to state 177
+    OR          shift, and go to state 178
 
-    $default  reduce using rule 94 (expr)
+    $default  reduce using rule 164 (opt_alias)
+
+    alias      go to state 179
+    opt_alias  go to state 180
 
 
 State 123
 
-  101 operand: scalar_expr .
+   94 expr: operand .
+  113 binary_expr: operand . '-' operand
+  114            | operand . '+' operand
+  115            | operand . '/' operand
+  116            | operand . '*' operand
+  117            | operand . '%' operand
+  118            | operand . '^' operand
+  119            | operand . LIKE operand
+  120            | operand . NOT LIKE operand
+  123 in_expr: operand . IN '(' expr_list ')'
+  124        | operand . NOT IN '(' expr_list ')'
+  125        | operand . IN '(' select_no_paren ')'
+  126        | operand . NOT IN '(' select_no_paren ')'
+  131 comp_expr: operand . '=' operand
+  132          | operand . NOTEQUALS operand
+  133          | operand . '<' operand
+  134          | operand . '>' operand
+  135          | operand . LESSEQ operand
+  136          | operand . GREATEREQ operand
+  138 between_expr: operand . BETWEEN operand AND operand
 
-    $default  reduce using rule 101 (operand)
+    NOTEQUALS  shift, and go to state 181
+    LESSEQ     shift, and go to state 182
+    GREATEREQ  shift, and go to state 183
+    BETWEEN    shift, and go to state 184
+    LIKE       shift, and go to state 185
+    NOT        shift, and go to state 186
+    IN         shift, and go to state 187
+    '='        shift, and go to state 188
+    '<'        shift, and go to state 189
+    '>'        shift, and go to state 190
+    '+'        shift, and go to state 191
+    '-'        shift, and go to state 192
+    '*'        shift, and go to state 193
+    '/'        shift, and go to state 194
+    '%'        shift, and go to state 195
+    '^'        shift, and go to state 196
+
+    $default  reduce using rule 94 (expr)
 
 
 State 124
 
-  102 operand: unary_expr .
+  102 operand: scalar_expr .
 
     $default  reduce using rule 102 (operand)
 
 
 State 125
 
-  103 operand: binary_expr .
+  103 operand: unary_expr .
 
     $default  reduce using rule 103 (operand)
 
 
 State 126
 
+  104 operand: binary_expr .
+
+    $default  reduce using rule 104 (operand)
+
+
+State 127
+
    96 expr: logic_expr .
 
     $default  reduce using rule 96 (expr)
 
 
-State 127
+State 128
 
    99 expr: in_expr .
 
     $default  reduce using rule 99 (expr)
 
 
-State 128
+State 129
+
+  100 expr: sum_expr .
+
+    $default  reduce using rule 100 (expr)
+
+
+State 130
 
    98 expr: case_expr .
 
     $default  reduce using rule 98 (expr)
 
 
-State 129
+State 131
 
    97 expr: exists_expr .
 
     $default  reduce using rule 97 (expr)
 
 
-State 130
-
-  111 binary_expr: comp_expr .
-
-    $default  reduce using rule 111 (binary_expr)
-
-
-State 131
-
-  104 operand: function_expr .
-
-    $default  reduce using rule 104 (operand)
-
-
 State 132
+
+  112 binary_expr: comp_expr .
+
+    $default  reduce using rule 112 (binary_expr)
+
+
+State 133
+
+  105 operand: function_expr .
+
+    $default  reduce using rule 105 (operand)
+
+
+State 134
 
    95 expr: between_expr .
 
     $default  reduce using rule 95 (expr)
 
 
-State 133
-
-  106 scalar_expr: column_name .
-
-    $default  reduce using rule 106 (scalar_expr)
-
-
-State 134
-
-  108 scalar_expr: literal .
-
-    $default  reduce using rule 108 (scalar_expr)
-
-
 State 135
 
-  107 scalar_expr: star_expr .
+  107 scalar_expr: column_name .
 
     $default  reduce using rule 107 (scalar_expr)
 
 
 State 136
 
-   51 update_clause: IDENTIFIER . '=' literal
+  109 scalar_expr: literal .
 
-    '='  shift, and go to state 194
+    $default  reduce using rule 109 (scalar_expr)
 
 
 State 137
+
+  108 scalar_expr: star_expr .
+
+    $default  reduce using rule 108 (scalar_expr)
+
+
+State 138
+
+   51 update_clause: IDENTIFIER . '=' literal
+
+    '='  shift, and go to state 197
+
+
+State 139
 
    48 update_statement: UPDATE table_ref_name_no_alias SET update_clause_commalist . opt_where
    50 update_clause_commalist: update_clause_commalist . ',' update_clause
 
     WHERE  shift, and go to state 106
-    ','    shift, and go to state 195
+    ','    shift, and go to state 198
 
     $default  reduce using rule 68 (opt_where)
 
-    opt_where  go to state 196
+    opt_where  go to state 199
 
 
-State 138
+State 140
 
    49 update_clause_commalist: update_clause .
 
     $default  reduce using rule 49 (update_clause_commalist)
 
 
-State 139
+State 141
 
    73 opt_order: ORDER BY order_list .
    76 order_list: order_list . ',' order_desc
 
-    ','  shift, and go to state 197
+    ','  shift, and go to state 200
 
     $default  reduce using rule 73 (opt_order)
 
 
-State 140
+State 142
 
    75 order_list: order_desc .
 
     $default  reduce using rule 75 (order_list)
 
 
-State 141
+State 143
 
    77 order_desc: expr . opt_order_type
-  120 logic_expr: expr . AND expr
-  121           | expr . OR expr
+  121 logic_expr: expr . AND expr
+  122           | expr . OR expr
 
-    DESC  shift, and go to state 198
-    AND   shift, and go to state 173
-    ASC   shift, and go to state 199
-    OR    shift, and go to state 175
+    DESC  shift, and go to state 201
+    AND   shift, and go to state 176
+    ASC   shift, and go to state 202
+    OR    shift, and go to state 178
 
     $default  reduce using rule 80 (opt_order_type)
 
-    opt_order_type  go to state 200
+    opt_order_type  go to state 203
 
 
-State 142
+State 144
 
    58 select_no_paren: select_clause set_operator select_with_paren opt_order . opt_limit
 
@@ -2173,10 +2201,10 @@ State 142
 
     $default  reduce using rule 85 (opt_limit)
 
-    opt_limit  go to state 201
+    opt_limit  go to state 204
 
 
-State 143
+State 145
 
    57 select_no_paren: select_clause set_operator select_clause opt_order . opt_limit
 
@@ -2184,27 +2212,27 @@ State 143
 
     $default  reduce using rule 85 (opt_limit)
 
-    opt_limit  go to state 202
+    opt_limit  go to state 205
 
 
-State 144
+State 146
 
    83 opt_limit: LIMIT int_literal .
    84          | LIMIT int_literal . OFFSET int_literal
 
-    OFFSET  shift, and go to state 203
+    OFFSET  shift, and go to state 206
 
     $default  reduce using rule 83 (opt_limit)
 
 
-State 145
+State 147
 
    20 execute_statement: EXECUTE IDENTIFIER '(' literal_list ')' .
 
     $default  reduce using rule 20 (execute_statement)
 
 
-State 146
+State 148
 
    92 literal_list: literal_list ',' . literal
 
@@ -2213,138 +2241,138 @@ State 146
     INTVAL    shift, and go to state 75
     '?'       shift, and go to state 94
 
-    literal           go to state 204
+    literal           go to state 207
     string_literal    go to state 97
     num_literal       go to state 98
     int_literal       go to state 99
     placeholder_expr  go to state 100
 
 
-State 147
+State 149
 
    18 prepare_statement: PREPARE IDENTIFIER '{' statement_list opt_semicolon . '}'
 
-    '}'  shift, and go to state 205
+    '}'  shift, and go to state 208
 
 
-State 148
+State 150
 
    27 opt_not_exists: IF NOT EXISTS .
 
     $default  reduce using rule 27 (opt_not_exists)
 
 
-State 149
+State 151
 
    24 create_statement: CREATE TABLE opt_not_exists table_name FROM . TBL FILE file_path
 
-    TBL  shift, and go to state 206
-
-
-State 150
-
-   25 create_statement: CREATE TABLE opt_not_exists table_name '(' . column_def_commalist opt_primary_key ')'
-
-    IDENTIFIER  shift, and go to state 207
-
-    column_def_commalist  go to state 208
-    column_def            go to state 209
-
-
-State 151
-
-   26 create_statement: CREATE VIEW opt_not_exists table_name opt_column_list . AS select_statement
-
-    AS  shift, and go to state 210
+    TBL  shift, and go to state 209
 
 
 State 152
 
-   67 opt_where: WHERE expr .
-  120 logic_expr: expr . AND expr
-  121           | expr . OR expr
+   25 create_statement: CREATE TABLE opt_not_exists table_name '(' . column_def_commalist opt_primary_key ')'
 
-    AND  shift, and go to state 173
-    OR   shift, and go to state 175
+    IDENTIFIER  shift, and go to state 210
 
-    $default  reduce using rule 67 (opt_where)
+    column_def_commalist  go to state 211
+    column_def            go to state 212
 
 
 State 153
 
-   21 import_statement: IMPORT FROM import_file_type FILE file_path . INTO table_name
+   26 create_statement: CREATE VIEW opt_not_exists table_name opt_column_list . AS select_statement
 
-    INTO  shift, and go to state 211
+    AS  shift, and go to state 213
 
 
 State 154
+
+   67 opt_where: WHERE expr .
+  121 logic_expr: expr . AND expr
+  122           | expr . OR expr
+
+    AND  shift, and go to state 176
+    OR   shift, and go to state 178
+
+    $default  reduce using rule 67 (opt_where)
+
+
+State 155
+
+   21 import_statement: IMPORT FROM import_file_type FILE file_path . INTO table_name
+
+    INTO  shift, and go to state 214
+
+
+State 156
 
    23 file_path: string_literal .
 
     $default  reduce using rule 23 (file_path)
 
 
-State 155
-
-  178 ident_commalist: IDENTIFIER .
-
-    $default  reduce using rule 178 (ident_commalist)
-
-
-State 156
-
-   46 opt_column_list: '(' ident_commalist . ')'
-  179 ident_commalist: ident_commalist . ',' IDENTIFIER
-
-    ')'  shift, and go to state 212
-    ','  shift, and go to state 213
-
-
 State 157
 
-   44 insert_statement: INSERT INTO table_name opt_column_list VALUES . '(' literal_list ')'
+  180 ident_commalist: IDENTIFIER .
 
-    '('  shift, and go to state 214
+    $default  reduce using rule 180 (ident_commalist)
 
 
 State 158
+
+   46 opt_column_list: '(' ident_commalist . ')'
+  181 ident_commalist: ident_commalist . ',' IDENTIFIER
+
+    ')'  shift, and go to state 215
+    ','  shift, and go to state 216
+
+
+State 159
+
+   44 insert_statement: INSERT INTO table_name opt_column_list VALUES . '(' literal_list ')'
+
+    '('  shift, and go to state 217
+
+
+State 160
 
    45 insert_statement: INSERT INTO table_name opt_column_list select_no_paren .
 
     $default  reduce using rule 45 (insert_statement)
 
 
-State 159
+State 161
 
-  135 function_expr: IDENTIFIER '(' . opt_distinct expr_list ')'
+  137 function_expr: IDENTIFIER '(' . opt_distinct expr_list ')'
 
     DISTINCT  shift, and go to state 77
 
     $default  reduce using rule 64 (opt_distinct)
 
-    opt_distinct  go to state 215
-
-
-State 160
-
-  138 column_name: IDENTIFIER '.' . IDENTIFIER
-
-    IDENTIFIER  shift, and go to state 216
-
-
-State 161
-
-  127 exists_expr: EXISTS '(' . select_no_paren ')'
-
-    SELECT  shift, and go to state 9
-
-    select_no_paren  go to state 217
-    select_clause    go to state 31
+    opt_distinct  go to state 218
 
 
 State 162
 
-  126 case_expr: CASE WHEN . expr THEN operand ELSE operand END
+  140 column_name: IDENTIFIER '.' . IDENTIFIER
+
+    IDENTIFIER  shift, and go to state 219
+
+
+State 163
+
+  129 exists_expr: EXISTS '(' . select_no_paren ')'
+
+    SELECT  shift, and go to state 9
+
+    select_no_paren  go to state 220
+    select_clause    go to state 31
+
+
+State 164
+
+  128 case_expr: CASE WHEN . expr THEN operand ELSE operand END
 
     IDENTIFIER  shift, and go to state 111
     STRING      shift, and go to state 92
@@ -2353,164 +2381,205 @@ State 162
     EXISTS      shift, and go to state 112
     CASE        shift, and go to state 113
     NOT         shift, and go to state 114
-    '-'         shift, and go to state 115
-    '*'         shift, and go to state 116
-    '('         shift, and go to state 117
+    SUM         shift, and go to state 115
+    '-'         shift, and go to state 116
+    '*'         shift, and go to state 117
+    '('         shift, and go to state 118
     '?'         shift, and go to state 94
 
-    expr              go to state 218
-    operand           go to state 122
-    scalar_expr       go to state 123
-    unary_expr        go to state 124
-    binary_expr       go to state 125
-    logic_expr        go to state 126
-    in_expr           go to state 127
-    case_expr         go to state 128
-    exists_expr       go to state 129
-    comp_expr         go to state 130
-    function_expr     go to state 131
-    between_expr      go to state 132
-    column_name       go to state 133
-    literal           go to state 134
+    expr              go to state 221
+    operand           go to state 123
+    scalar_expr       go to state 124
+    unary_expr        go to state 125
+    binary_expr       go to state 126
+    logic_expr        go to state 127
+    in_expr           go to state 128
+    sum_expr          go to state 129
+    case_expr         go to state 130
+    exists_expr       go to state 131
+    comp_expr         go to state 132
+    function_expr     go to state 133
+    between_expr      go to state 134
+    column_name       go to state 135
+    literal           go to state 136
     string_literal    go to state 97
     num_literal       go to state 98
     int_literal       go to state 99
-    star_expr         go to state 135
-    placeholder_expr  go to state 100
-
-
-State 163
-
-  128 exists_expr: NOT EXISTS . '(' select_no_paren ')'
-
-    '('  shift, and go to state 219
-
-
-State 164
-
-  110 unary_expr: NOT . operand
-
-    IDENTIFIER  shift, and go to state 111
-    STRING      shift, and go to state 92
-    FLOATVAL    shift, and go to state 93
-    INTVAL      shift, and go to state 75
-    NOT         shift, and go to state 164
-    '-'         shift, and go to state 115
-    '*'         shift, and go to state 116
-    '('         shift, and go to state 117
-    '?'         shift, and go to state 94
-
-    operand           go to state 165
-    scalar_expr       go to state 123
-    unary_expr        go to state 124
-    binary_expr       go to state 125
-    comp_expr         go to state 130
-    function_expr     go to state 131
-    column_name       go to state 133
-    literal           go to state 134
-    string_literal    go to state 97
-    num_literal       go to state 98
-    int_literal       go to state 99
-    star_expr         go to state 135
+    star_expr         go to state 137
     placeholder_expr  go to state 100
 
 
 State 165
 
-  110 unary_expr: NOT operand .
-  112 binary_expr: operand . '-' operand
-  113            | operand . '+' operand
-  114            | operand . '/' operand
-  115            | operand . '*' operand
-  116            | operand . '%' operand
-  117            | operand . '^' operand
-  118            | operand . LIKE operand
-  119            | operand . NOT LIKE operand
-  129 comp_expr: operand . '=' operand
-  130          | operand . NOTEQUALS operand
-  131          | operand . '<' operand
-  132          | operand . '>' operand
-  133          | operand . LESSEQ operand
-  134          | operand . GREATEREQ operand
+  130 exists_expr: NOT EXISTS . '(' select_no_paren ')'
 
-    NOTEQUALS  shift, and go to state 178
-    LESSEQ     shift, and go to state 179
-    GREATEREQ  shift, and go to state 180
-    LIKE       shift, and go to state 182
-    NOT        shift, and go to state 220
-    '='        shift, and go to state 185
-    '<'        shift, and go to state 186
-    '>'        shift, and go to state 187
-    '+'        shift, and go to state 188
-    '-'        shift, and go to state 189
-    '*'        shift, and go to state 190
-    '/'        shift, and go to state 191
-    '%'        shift, and go to state 192
-    '^'        shift, and go to state 193
-
-    $default  reduce using rule 110 (unary_expr)
+    '('  shift, and go to state 222
 
 
 State 166
 
-  109 unary_expr: '-' operand .
-  112 binary_expr: operand . '-' operand
-  113            | operand . '+' operand
-  114            | operand . '/' operand
-  115            | operand . '*' operand
-  116            | operand . '%' operand
-  117            | operand . '^' operand
-  118            | operand . LIKE operand
-  119            | operand . NOT LIKE operand
-  129 comp_expr: operand . '=' operand
-  130          | operand . NOTEQUALS operand
-  131          | operand . '<' operand
-  132          | operand . '>' operand
-  133          | operand . LESSEQ operand
-  134          | operand . GREATEREQ operand
+  111 unary_expr: NOT . operand
 
-    '*'  shift, and go to state 190
-    '/'  shift, and go to state 191
-    '%'  shift, and go to state 192
-    '^'  shift, and go to state 193
+    IDENTIFIER  shift, and go to state 111
+    STRING      shift, and go to state 92
+    FLOATVAL    shift, and go to state 93
+    INTVAL      shift, and go to state 75
+    NOT         shift, and go to state 166
+    '-'         shift, and go to state 116
+    '*'         shift, and go to state 117
+    '('         shift, and go to state 118
+    '?'         shift, and go to state 94
 
-    $default  reduce using rule 109 (unary_expr)
+    operand           go to state 167
+    scalar_expr       go to state 124
+    unary_expr        go to state 125
+    binary_expr       go to state 126
+    comp_expr         go to state 132
+    function_expr     go to state 133
+    column_name       go to state 135
+    literal           go to state 136
+    string_literal    go to state 97
+    num_literal       go to state 98
+    int_literal       go to state 99
+    star_expr         go to state 137
+    placeholder_expr  go to state 100
 
 
 State 167
 
-  105 operand: '(' select_no_paren . ')'
+  111 unary_expr: NOT operand .
+  113 binary_expr: operand . '-' operand
+  114            | operand . '+' operand
+  115            | operand . '/' operand
+  116            | operand . '*' operand
+  117            | operand . '%' operand
+  118            | operand . '^' operand
+  119            | operand . LIKE operand
+  120            | operand . NOT LIKE operand
+  131 comp_expr: operand . '=' operand
+  132          | operand . NOTEQUALS operand
+  133          | operand . '<' operand
+  134          | operand . '>' operand
+  135          | operand . LESSEQ operand
+  136          | operand . GREATEREQ operand
 
-    ')'  shift, and go to state 221
+    NOTEQUALS  shift, and go to state 181
+    LESSEQ     shift, and go to state 182
+    GREATEREQ  shift, and go to state 183
+    LIKE       shift, and go to state 185
+    NOT        shift, and go to state 223
+    '='        shift, and go to state 188
+    '<'        shift, and go to state 189
+    '>'        shift, and go to state 190
+    '+'        shift, and go to state 191
+    '-'        shift, and go to state 192
+    '*'        shift, and go to state 193
+    '/'        shift, and go to state 194
+    '%'        shift, and go to state 195
+    '^'        shift, and go to state 196
+
+    $default  reduce using rule 111 (unary_expr)
 
 
 State 168
 
-  100 operand: '(' expr . ')'
-  120 logic_expr: expr . AND expr
-  121           | expr . OR expr
+  127 sum_expr: SUM '(' . expr ')'
 
-    AND  shift, and go to state 173
-    OR   shift, and go to state 175
-    ')'  shift, and go to state 222
+    IDENTIFIER  shift, and go to state 111
+    STRING      shift, and go to state 92
+    FLOATVAL    shift, and go to state 93
+    INTVAL      shift, and go to state 75
+    EXISTS      shift, and go to state 112
+    CASE        shift, and go to state 113
+    NOT         shift, and go to state 114
+    SUM         shift, and go to state 115
+    '-'         shift, and go to state 116
+    '*'         shift, and go to state 117
+    '('         shift, and go to state 118
+    '?'         shift, and go to state 94
+
+    expr              go to state 224
+    operand           go to state 123
+    scalar_expr       go to state 124
+    unary_expr        go to state 125
+    binary_expr       go to state 126
+    logic_expr        go to state 127
+    in_expr           go to state 128
+    sum_expr          go to state 129
+    case_expr         go to state 130
+    exists_expr       go to state 131
+    comp_expr         go to state 132
+    function_expr     go to state 133
+    between_expr      go to state 134
+    column_name       go to state 135
+    literal           go to state 136
+    string_literal    go to state 97
+    num_literal       go to state 98
+    int_literal       go to state 99
+    star_expr         go to state 137
+    placeholder_expr  go to state 100
 
 
 State 169
 
-   66 from_clause: FROM . table_ref
+  110 unary_expr: '-' operand .
+  113 binary_expr: operand . '-' operand
+  114            | operand . '+' operand
+  115            | operand . '/' operand
+  116            | operand . '*' operand
+  117            | operand . '%' operand
+  118            | operand . '^' operand
+  119            | operand . LIKE operand
+  120            | operand . NOT LIKE operand
+  131 comp_expr: operand . '=' operand
+  132          | operand . NOTEQUALS operand
+  133          | operand . '<' operand
+  134          | operand . '>' operand
+  135          | operand . LESSEQ operand
+  136          | operand . GREATEREQ operand
 
-    IDENTIFIER  shift, and go to state 35
-    '('         shift, and go to state 223
+    '*'  shift, and go to state 193
+    '/'  shift, and go to state 194
+    '%'  shift, and go to state 195
+    '^'  shift, and go to state 196
 
-    table_ref         go to state 224
-    table_ref_atomic  go to state 225
-    table_ref_name    go to state 226
-    table_name        go to state 227
-    join_clause       go to state 228
-    join_table        go to state 229
+    $default  reduce using rule 110 (unary_expr)
 
 
 State 170
+
+  106 operand: '(' select_no_paren . ')'
+
+    ')'  shift, and go to state 225
+
+
+State 171
+
+  101 operand: '(' expr . ')'
+  121 logic_expr: expr . AND expr
+  122           | expr . OR expr
+
+    AND  shift, and go to state 176
+    OR   shift, and go to state 178
+    ')'  shift, and go to state 226
+
+
+State 172
+
+   66 from_clause: FROM . table_ref
+
+    IDENTIFIER  shift, and go to state 35
+    '('         shift, and go to state 227
+
+    table_ref         go to state 228
+    table_ref_atomic  go to state 229
+    table_ref_name    go to state 230
+    table_name        go to state 231
+    join_clause       go to state 232
+    join_table        go to state 233
+
+
+State 173
 
    62 select_clause: SELECT opt_top opt_distinct select_list from_clause . opt_where opt_group
 
@@ -2518,10 +2587,10 @@ State 170
 
     $default  reduce using rule 68 (opt_where)
 
-    opt_where  go to state 230
+    opt_where  go to state 234
 
 
-State 171
+State 174
 
    90 expr_list: expr_list ',' . expr_alias
 
@@ -2532,87 +2601,45 @@ State 171
     EXISTS      shift, and go to state 112
     CASE        shift, and go to state 113
     NOT         shift, and go to state 114
-    '-'         shift, and go to state 115
-    '*'         shift, and go to state 116
-    '('         shift, and go to state 117
+    SUM         shift, and go to state 115
+    '-'         shift, and go to state 116
+    '*'         shift, and go to state 117
+    '('         shift, and go to state 118
     '?'         shift, and go to state 94
 
-    expr_alias        go to state 231
-    expr              go to state 121
-    operand           go to state 122
-    scalar_expr       go to state 123
-    unary_expr        go to state 124
-    binary_expr       go to state 125
-    logic_expr        go to state 126
-    in_expr           go to state 127
-    case_expr         go to state 128
-    exists_expr       go to state 129
-    comp_expr         go to state 130
-    function_expr     go to state 131
-    between_expr      go to state 132
-    column_name       go to state 133
-    literal           go to state 134
+    expr_alias        go to state 235
+    expr              go to state 122
+    operand           go to state 123
+    scalar_expr       go to state 124
+    unary_expr        go to state 125
+    binary_expr       go to state 126
+    logic_expr        go to state 127
+    in_expr           go to state 128
+    sum_expr          go to state 129
+    case_expr         go to state 130
+    exists_expr       go to state 131
+    comp_expr         go to state 132
+    function_expr     go to state 133
+    between_expr      go to state 134
+    column_name       go to state 135
+    literal           go to state 136
     string_literal    go to state 97
     num_literal       go to state 98
     int_literal       go to state 99
-    star_expr         go to state 135
+    star_expr         go to state 137
     placeholder_expr  go to state 100
-
-
-State 172
-
-  160 alias: IDENTIFIER .
-
-    $default  reduce using rule 160 (alias)
-
-
-State 173
-
-  120 logic_expr: expr AND . expr
-
-    IDENTIFIER  shift, and go to state 111
-    STRING      shift, and go to state 92
-    FLOATVAL    shift, and go to state 93
-    INTVAL      shift, and go to state 75
-    EXISTS      shift, and go to state 112
-    CASE        shift, and go to state 113
-    NOT         shift, and go to state 114
-    '-'         shift, and go to state 115
-    '*'         shift, and go to state 116
-    '('         shift, and go to state 117
-    '?'         shift, and go to state 94
-
-    expr              go to state 232
-    operand           go to state 122
-    scalar_expr       go to state 123
-    unary_expr        go to state 124
-    binary_expr       go to state 125
-    logic_expr        go to state 126
-    in_expr           go to state 127
-    case_expr         go to state 128
-    exists_expr       go to state 129
-    comp_expr         go to state 130
-    function_expr     go to state 131
-    between_expr      go to state 132
-    column_name       go to state 133
-    literal           go to state 134
-    string_literal    go to state 97
-    num_literal       go to state 98
-    int_literal       go to state 99
-    star_expr         go to state 135
-    placeholder_expr  go to state 100
-
-
-State 174
-
-  159 alias: AS . IDENTIFIER
-
-    IDENTIFIER  shift, and go to state 233
 
 
 State 175
 
-  121 logic_expr: expr OR . expr
+  162 alias: IDENTIFIER .
+
+    $default  reduce using rule 162 (alias)
+
+
+State 176
+
+  121 logic_expr: expr AND . expr
 
     IDENTIFIER  shift, and go to state 111
     STRING      shift, and go to state 92
@@ -2621,471 +2648,519 @@ State 175
     EXISTS      shift, and go to state 112
     CASE        shift, and go to state 113
     NOT         shift, and go to state 114
-    '-'         shift, and go to state 115
-    '*'         shift, and go to state 116
-    '('         shift, and go to state 117
+    SUM         shift, and go to state 115
+    '-'         shift, and go to state 116
+    '*'         shift, and go to state 117
+    '('         shift, and go to state 118
     '?'         shift, and go to state 94
 
-    expr              go to state 234
-    operand           go to state 122
-    scalar_expr       go to state 123
-    unary_expr        go to state 124
-    binary_expr       go to state 125
-    logic_expr        go to state 126
-    in_expr           go to state 127
-    case_expr         go to state 128
-    exists_expr       go to state 129
-    comp_expr         go to state 130
-    function_expr     go to state 131
-    between_expr      go to state 132
-    column_name       go to state 133
-    literal           go to state 134
+    expr              go to state 236
+    operand           go to state 123
+    scalar_expr       go to state 124
+    unary_expr        go to state 125
+    binary_expr       go to state 126
+    logic_expr        go to state 127
+    in_expr           go to state 128
+    sum_expr          go to state 129
+    case_expr         go to state 130
+    exists_expr       go to state 131
+    comp_expr         go to state 132
+    function_expr     go to state 133
+    between_expr      go to state 134
+    column_name       go to state 135
+    literal           go to state 136
     string_literal    go to state 97
     num_literal       go to state 98
     int_literal       go to state 99
-    star_expr         go to state 135
+    star_expr         go to state 137
     placeholder_expr  go to state 100
 
 
-State 176
-
-  161 opt_alias: alias .
-
-    $default  reduce using rule 161 (opt_alias)
-
-
 State 177
+
+  161 alias: AS . IDENTIFIER
+
+    IDENTIFIER  shift, and go to state 237
+
+
+State 178
+
+  122 logic_expr: expr OR . expr
+
+    IDENTIFIER  shift, and go to state 111
+    STRING      shift, and go to state 92
+    FLOATVAL    shift, and go to state 93
+    INTVAL      shift, and go to state 75
+    EXISTS      shift, and go to state 112
+    CASE        shift, and go to state 113
+    NOT         shift, and go to state 114
+    SUM         shift, and go to state 115
+    '-'         shift, and go to state 116
+    '*'         shift, and go to state 117
+    '('         shift, and go to state 118
+    '?'         shift, and go to state 94
+
+    expr              go to state 238
+    operand           go to state 123
+    scalar_expr       go to state 124
+    unary_expr        go to state 125
+    binary_expr       go to state 126
+    logic_expr        go to state 127
+    in_expr           go to state 128
+    sum_expr          go to state 129
+    case_expr         go to state 130
+    exists_expr       go to state 131
+    comp_expr         go to state 132
+    function_expr     go to state 133
+    between_expr      go to state 134
+    column_name       go to state 135
+    literal           go to state 136
+    string_literal    go to state 97
+    num_literal       go to state 98
+    int_literal       go to state 99
+    star_expr         go to state 137
+    placeholder_expr  go to state 100
+
+
+State 179
+
+  163 opt_alias: alias .
+
+    $default  reduce using rule 163 (opt_alias)
+
+
+State 180
 
    93 expr_alias: expr opt_alias .
 
     $default  reduce using rule 93 (expr_alias)
 
 
-State 178
-
-  130 comp_expr: operand NOTEQUALS . operand
-
-    IDENTIFIER  shift, and go to state 111
-    STRING      shift, and go to state 92
-    FLOATVAL    shift, and go to state 93
-    INTVAL      shift, and go to state 75
-    NOT         shift, and go to state 164
-    '-'         shift, and go to state 115
-    '*'         shift, and go to state 116
-    '('         shift, and go to state 117
-    '?'         shift, and go to state 94
-
-    operand           go to state 235
-    scalar_expr       go to state 123
-    unary_expr        go to state 124
-    binary_expr       go to state 125
-    comp_expr         go to state 130
-    function_expr     go to state 131
-    column_name       go to state 133
-    literal           go to state 134
-    string_literal    go to state 97
-    num_literal       go to state 98
-    int_literal       go to state 99
-    star_expr         go to state 135
-    placeholder_expr  go to state 100
-
-
-State 179
-
-  133 comp_expr: operand LESSEQ . operand
-
-    IDENTIFIER  shift, and go to state 111
-    STRING      shift, and go to state 92
-    FLOATVAL    shift, and go to state 93
-    INTVAL      shift, and go to state 75
-    NOT         shift, and go to state 164
-    '-'         shift, and go to state 115
-    '*'         shift, and go to state 116
-    '('         shift, and go to state 117
-    '?'         shift, and go to state 94
-
-    operand           go to state 236
-    scalar_expr       go to state 123
-    unary_expr        go to state 124
-    binary_expr       go to state 125
-    comp_expr         go to state 130
-    function_expr     go to state 131
-    column_name       go to state 133
-    literal           go to state 134
-    string_literal    go to state 97
-    num_literal       go to state 98
-    int_literal       go to state 99
-    star_expr         go to state 135
-    placeholder_expr  go to state 100
-
-
-State 180
-
-  134 comp_expr: operand GREATEREQ . operand
-
-    IDENTIFIER  shift, and go to state 111
-    STRING      shift, and go to state 92
-    FLOATVAL    shift, and go to state 93
-    INTVAL      shift, and go to state 75
-    NOT         shift, and go to state 164
-    '-'         shift, and go to state 115
-    '*'         shift, and go to state 116
-    '('         shift, and go to state 117
-    '?'         shift, and go to state 94
-
-    operand           go to state 237
-    scalar_expr       go to state 123
-    unary_expr        go to state 124
-    binary_expr       go to state 125
-    comp_expr         go to state 130
-    function_expr     go to state 131
-    column_name       go to state 133
-    literal           go to state 134
-    string_literal    go to state 97
-    num_literal       go to state 98
-    int_literal       go to state 99
-    star_expr         go to state 135
-    placeholder_expr  go to state 100
-
-
 State 181
 
-  136 between_expr: operand BETWEEN . operand AND operand
+  132 comp_expr: operand NOTEQUALS . operand
 
     IDENTIFIER  shift, and go to state 111
     STRING      shift, and go to state 92
     FLOATVAL    shift, and go to state 93
     INTVAL      shift, and go to state 75
-    NOT         shift, and go to state 164
-    '-'         shift, and go to state 115
-    '*'         shift, and go to state 116
-    '('         shift, and go to state 117
+    NOT         shift, and go to state 166
+    '-'         shift, and go to state 116
+    '*'         shift, and go to state 117
+    '('         shift, and go to state 118
     '?'         shift, and go to state 94
 
-    operand           go to state 238
-    scalar_expr       go to state 123
-    unary_expr        go to state 124
-    binary_expr       go to state 125
-    comp_expr         go to state 130
-    function_expr     go to state 131
-    column_name       go to state 133
-    literal           go to state 134
+    operand           go to state 239
+    scalar_expr       go to state 124
+    unary_expr        go to state 125
+    binary_expr       go to state 126
+    comp_expr         go to state 132
+    function_expr     go to state 133
+    column_name       go to state 135
+    literal           go to state 136
     string_literal    go to state 97
     num_literal       go to state 98
     int_literal       go to state 99
-    star_expr         go to state 135
+    star_expr         go to state 137
     placeholder_expr  go to state 100
 
 
 State 182
 
-  118 binary_expr: operand LIKE . operand
+  135 comp_expr: operand LESSEQ . operand
 
     IDENTIFIER  shift, and go to state 111
     STRING      shift, and go to state 92
     FLOATVAL    shift, and go to state 93
     INTVAL      shift, and go to state 75
-    NOT         shift, and go to state 164
-    '-'         shift, and go to state 115
-    '*'         shift, and go to state 116
-    '('         shift, and go to state 117
+    NOT         shift, and go to state 166
+    '-'         shift, and go to state 116
+    '*'         shift, and go to state 117
+    '('         shift, and go to state 118
     '?'         shift, and go to state 94
 
-    operand           go to state 239
-    scalar_expr       go to state 123
-    unary_expr        go to state 124
-    binary_expr       go to state 125
-    comp_expr         go to state 130
-    function_expr     go to state 131
-    column_name       go to state 133
-    literal           go to state 134
+    operand           go to state 240
+    scalar_expr       go to state 124
+    unary_expr        go to state 125
+    binary_expr       go to state 126
+    comp_expr         go to state 132
+    function_expr     go to state 133
+    column_name       go to state 135
+    literal           go to state 136
     string_literal    go to state 97
     num_literal       go to state 98
     int_literal       go to state 99
-    star_expr         go to state 135
+    star_expr         go to state 137
     placeholder_expr  go to state 100
 
 
 State 183
 
-  119 binary_expr: operand NOT . LIKE operand
-  123 in_expr: operand NOT . IN '(' expr_list ')'
-  125        | operand NOT . IN '(' select_no_paren ')'
-
-    LIKE  shift, and go to state 240
-    IN    shift, and go to state 241
-
-
-State 184
-
-  122 in_expr: operand IN . '(' expr_list ')'
-  124        | operand IN . '(' select_no_paren ')'
-
-    '('  shift, and go to state 242
-
-
-State 185
-
-  129 comp_expr: operand '=' . operand
+  136 comp_expr: operand GREATEREQ . operand
 
     IDENTIFIER  shift, and go to state 111
     STRING      shift, and go to state 92
     FLOATVAL    shift, and go to state 93
     INTVAL      shift, and go to state 75
-    NOT         shift, and go to state 164
-    '-'         shift, and go to state 115
-    '*'         shift, and go to state 116
-    '('         shift, and go to state 117
+    NOT         shift, and go to state 166
+    '-'         shift, and go to state 116
+    '*'         shift, and go to state 117
+    '('         shift, and go to state 118
     '?'         shift, and go to state 94
 
-    operand           go to state 243
-    scalar_expr       go to state 123
-    unary_expr        go to state 124
-    binary_expr       go to state 125
-    comp_expr         go to state 130
-    function_expr     go to state 131
-    column_name       go to state 133
-    literal           go to state 134
+    operand           go to state 241
+    scalar_expr       go to state 124
+    unary_expr        go to state 125
+    binary_expr       go to state 126
+    comp_expr         go to state 132
+    function_expr     go to state 133
+    column_name       go to state 135
+    literal           go to state 136
     string_literal    go to state 97
     num_literal       go to state 98
     int_literal       go to state 99
-    star_expr         go to state 135
+    star_expr         go to state 137
+    placeholder_expr  go to state 100
+
+
+State 184
+
+  138 between_expr: operand BETWEEN . operand AND operand
+
+    IDENTIFIER  shift, and go to state 111
+    STRING      shift, and go to state 92
+    FLOATVAL    shift, and go to state 93
+    INTVAL      shift, and go to state 75
+    NOT         shift, and go to state 166
+    '-'         shift, and go to state 116
+    '*'         shift, and go to state 117
+    '('         shift, and go to state 118
+    '?'         shift, and go to state 94
+
+    operand           go to state 242
+    scalar_expr       go to state 124
+    unary_expr        go to state 125
+    binary_expr       go to state 126
+    comp_expr         go to state 132
+    function_expr     go to state 133
+    column_name       go to state 135
+    literal           go to state 136
+    string_literal    go to state 97
+    num_literal       go to state 98
+    int_literal       go to state 99
+    star_expr         go to state 137
+    placeholder_expr  go to state 100
+
+
+State 185
+
+  119 binary_expr: operand LIKE . operand
+
+    IDENTIFIER  shift, and go to state 111
+    STRING      shift, and go to state 92
+    FLOATVAL    shift, and go to state 93
+    INTVAL      shift, and go to state 75
+    NOT         shift, and go to state 166
+    '-'         shift, and go to state 116
+    '*'         shift, and go to state 117
+    '('         shift, and go to state 118
+    '?'         shift, and go to state 94
+
+    operand           go to state 243
+    scalar_expr       go to state 124
+    unary_expr        go to state 125
+    binary_expr       go to state 126
+    comp_expr         go to state 132
+    function_expr     go to state 133
+    column_name       go to state 135
+    literal           go to state 136
+    string_literal    go to state 97
+    num_literal       go to state 98
+    int_literal       go to state 99
+    star_expr         go to state 137
     placeholder_expr  go to state 100
 
 
 State 186
 
-  131 comp_expr: operand '<' . operand
+  120 binary_expr: operand NOT . LIKE operand
+  124 in_expr: operand NOT . IN '(' expr_list ')'
+  126        | operand NOT . IN '(' select_no_paren ')'
 
-    IDENTIFIER  shift, and go to state 111
-    STRING      shift, and go to state 92
-    FLOATVAL    shift, and go to state 93
-    INTVAL      shift, and go to state 75
-    NOT         shift, and go to state 164
-    '-'         shift, and go to state 115
-    '*'         shift, and go to state 116
-    '('         shift, and go to state 117
-    '?'         shift, and go to state 94
-
-    operand           go to state 244
-    scalar_expr       go to state 123
-    unary_expr        go to state 124
-    binary_expr       go to state 125
-    comp_expr         go to state 130
-    function_expr     go to state 131
-    column_name       go to state 133
-    literal           go to state 134
-    string_literal    go to state 97
-    num_literal       go to state 98
-    int_literal       go to state 99
-    star_expr         go to state 135
-    placeholder_expr  go to state 100
+    LIKE  shift, and go to state 244
+    IN    shift, and go to state 245
 
 
 State 187
 
-  132 comp_expr: operand '>' . operand
+  123 in_expr: operand IN . '(' expr_list ')'
+  125        | operand IN . '(' select_no_paren ')'
 
-    IDENTIFIER  shift, and go to state 111
-    STRING      shift, and go to state 92
-    FLOATVAL    shift, and go to state 93
-    INTVAL      shift, and go to state 75
-    NOT         shift, and go to state 164
-    '-'         shift, and go to state 115
-    '*'         shift, and go to state 116
-    '('         shift, and go to state 117
-    '?'         shift, and go to state 94
-
-    operand           go to state 245
-    scalar_expr       go to state 123
-    unary_expr        go to state 124
-    binary_expr       go to state 125
-    comp_expr         go to state 130
-    function_expr     go to state 131
-    column_name       go to state 133
-    literal           go to state 134
-    string_literal    go to state 97
-    num_literal       go to state 98
-    int_literal       go to state 99
-    star_expr         go to state 135
-    placeholder_expr  go to state 100
+    '('  shift, and go to state 246
 
 
 State 188
 
-  113 binary_expr: operand '+' . operand
+  131 comp_expr: operand '=' . operand
 
     IDENTIFIER  shift, and go to state 111
     STRING      shift, and go to state 92
     FLOATVAL    shift, and go to state 93
     INTVAL      shift, and go to state 75
-    NOT         shift, and go to state 164
-    '-'         shift, and go to state 115
-    '*'         shift, and go to state 116
-    '('         shift, and go to state 117
+    NOT         shift, and go to state 166
+    '-'         shift, and go to state 116
+    '*'         shift, and go to state 117
+    '('         shift, and go to state 118
     '?'         shift, and go to state 94
 
-    operand           go to state 246
-    scalar_expr       go to state 123
-    unary_expr        go to state 124
-    binary_expr       go to state 125
-    comp_expr         go to state 130
-    function_expr     go to state 131
-    column_name       go to state 133
-    literal           go to state 134
+    operand           go to state 247
+    scalar_expr       go to state 124
+    unary_expr        go to state 125
+    binary_expr       go to state 126
+    comp_expr         go to state 132
+    function_expr     go to state 133
+    column_name       go to state 135
+    literal           go to state 136
     string_literal    go to state 97
     num_literal       go to state 98
     int_literal       go to state 99
-    star_expr         go to state 135
+    star_expr         go to state 137
     placeholder_expr  go to state 100
 
 
 State 189
 
-  112 binary_expr: operand '-' . operand
+  133 comp_expr: operand '<' . operand
 
     IDENTIFIER  shift, and go to state 111
     STRING      shift, and go to state 92
     FLOATVAL    shift, and go to state 93
     INTVAL      shift, and go to state 75
-    NOT         shift, and go to state 164
-    '-'         shift, and go to state 115
-    '*'         shift, and go to state 116
-    '('         shift, and go to state 117
+    NOT         shift, and go to state 166
+    '-'         shift, and go to state 116
+    '*'         shift, and go to state 117
+    '('         shift, and go to state 118
     '?'         shift, and go to state 94
 
-    operand           go to state 247
-    scalar_expr       go to state 123
-    unary_expr        go to state 124
-    binary_expr       go to state 125
-    comp_expr         go to state 130
-    function_expr     go to state 131
-    column_name       go to state 133
-    literal           go to state 134
+    operand           go to state 248
+    scalar_expr       go to state 124
+    unary_expr        go to state 125
+    binary_expr       go to state 126
+    comp_expr         go to state 132
+    function_expr     go to state 133
+    column_name       go to state 135
+    literal           go to state 136
     string_literal    go to state 97
     num_literal       go to state 98
     int_literal       go to state 99
-    star_expr         go to state 135
+    star_expr         go to state 137
     placeholder_expr  go to state 100
 
 
 State 190
 
-  115 binary_expr: operand '*' . operand
+  134 comp_expr: operand '>' . operand
 
     IDENTIFIER  shift, and go to state 111
     STRING      shift, and go to state 92
     FLOATVAL    shift, and go to state 93
     INTVAL      shift, and go to state 75
-    NOT         shift, and go to state 164
-    '-'         shift, and go to state 115
-    '*'         shift, and go to state 116
-    '('         shift, and go to state 117
+    NOT         shift, and go to state 166
+    '-'         shift, and go to state 116
+    '*'         shift, and go to state 117
+    '('         shift, and go to state 118
     '?'         shift, and go to state 94
 
-    operand           go to state 248
-    scalar_expr       go to state 123
-    unary_expr        go to state 124
-    binary_expr       go to state 125
-    comp_expr         go to state 130
-    function_expr     go to state 131
-    column_name       go to state 133
-    literal           go to state 134
+    operand           go to state 249
+    scalar_expr       go to state 124
+    unary_expr        go to state 125
+    binary_expr       go to state 126
+    comp_expr         go to state 132
+    function_expr     go to state 133
+    column_name       go to state 135
+    literal           go to state 136
     string_literal    go to state 97
     num_literal       go to state 98
     int_literal       go to state 99
-    star_expr         go to state 135
+    star_expr         go to state 137
     placeholder_expr  go to state 100
 
 
 State 191
 
-  114 binary_expr: operand '/' . operand
+  114 binary_expr: operand '+' . operand
 
     IDENTIFIER  shift, and go to state 111
     STRING      shift, and go to state 92
     FLOATVAL    shift, and go to state 93
     INTVAL      shift, and go to state 75
-    NOT         shift, and go to state 164
-    '-'         shift, and go to state 115
-    '*'         shift, and go to state 116
-    '('         shift, and go to state 117
+    NOT         shift, and go to state 166
+    '-'         shift, and go to state 116
+    '*'         shift, and go to state 117
+    '('         shift, and go to state 118
     '?'         shift, and go to state 94
 
-    operand           go to state 249
-    scalar_expr       go to state 123
-    unary_expr        go to state 124
-    binary_expr       go to state 125
-    comp_expr         go to state 130
-    function_expr     go to state 131
-    column_name       go to state 133
-    literal           go to state 134
+    operand           go to state 250
+    scalar_expr       go to state 124
+    unary_expr        go to state 125
+    binary_expr       go to state 126
+    comp_expr         go to state 132
+    function_expr     go to state 133
+    column_name       go to state 135
+    literal           go to state 136
     string_literal    go to state 97
     num_literal       go to state 98
     int_literal       go to state 99
-    star_expr         go to state 135
+    star_expr         go to state 137
     placeholder_expr  go to state 100
 
 
 State 192
 
-  116 binary_expr: operand '%' . operand
+  113 binary_expr: operand '-' . operand
 
     IDENTIFIER  shift, and go to state 111
     STRING      shift, and go to state 92
     FLOATVAL    shift, and go to state 93
     INTVAL      shift, and go to state 75
-    NOT         shift, and go to state 164
-    '-'         shift, and go to state 115
-    '*'         shift, and go to state 116
-    '('         shift, and go to state 117
+    NOT         shift, and go to state 166
+    '-'         shift, and go to state 116
+    '*'         shift, and go to state 117
+    '('         shift, and go to state 118
     '?'         shift, and go to state 94
 
-    operand           go to state 250
-    scalar_expr       go to state 123
-    unary_expr        go to state 124
-    binary_expr       go to state 125
-    comp_expr         go to state 130
-    function_expr     go to state 131
-    column_name       go to state 133
-    literal           go to state 134
+    operand           go to state 251
+    scalar_expr       go to state 124
+    unary_expr        go to state 125
+    binary_expr       go to state 126
+    comp_expr         go to state 132
+    function_expr     go to state 133
+    column_name       go to state 135
+    literal           go to state 136
     string_literal    go to state 97
     num_literal       go to state 98
     int_literal       go to state 99
-    star_expr         go to state 135
+    star_expr         go to state 137
     placeholder_expr  go to state 100
 
 
 State 193
 
-  117 binary_expr: operand '^' . operand
+  116 binary_expr: operand '*' . operand
 
     IDENTIFIER  shift, and go to state 111
     STRING      shift, and go to state 92
     FLOATVAL    shift, and go to state 93
     INTVAL      shift, and go to state 75
-    NOT         shift, and go to state 164
-    '-'         shift, and go to state 115
-    '*'         shift, and go to state 116
-    '('         shift, and go to state 117
+    NOT         shift, and go to state 166
+    '-'         shift, and go to state 116
+    '*'         shift, and go to state 117
+    '('         shift, and go to state 118
     '?'         shift, and go to state 94
 
-    operand           go to state 251
-    scalar_expr       go to state 123
-    unary_expr        go to state 124
-    binary_expr       go to state 125
-    comp_expr         go to state 130
-    function_expr     go to state 131
-    column_name       go to state 133
-    literal           go to state 134
+    operand           go to state 252
+    scalar_expr       go to state 124
+    unary_expr        go to state 125
+    binary_expr       go to state 126
+    comp_expr         go to state 132
+    function_expr     go to state 133
+    column_name       go to state 135
+    literal           go to state 136
     string_literal    go to state 97
     num_literal       go to state 98
     int_literal       go to state 99
-    star_expr         go to state 135
+    star_expr         go to state 137
     placeholder_expr  go to state 100
 
 
 State 194
+
+  115 binary_expr: operand '/' . operand
+
+    IDENTIFIER  shift, and go to state 111
+    STRING      shift, and go to state 92
+    FLOATVAL    shift, and go to state 93
+    INTVAL      shift, and go to state 75
+    NOT         shift, and go to state 166
+    '-'         shift, and go to state 116
+    '*'         shift, and go to state 117
+    '('         shift, and go to state 118
+    '?'         shift, and go to state 94
+
+    operand           go to state 253
+    scalar_expr       go to state 124
+    unary_expr        go to state 125
+    binary_expr       go to state 126
+    comp_expr         go to state 132
+    function_expr     go to state 133
+    column_name       go to state 135
+    literal           go to state 136
+    string_literal    go to state 97
+    num_literal       go to state 98
+    int_literal       go to state 99
+    star_expr         go to state 137
+    placeholder_expr  go to state 100
+
+
+State 195
+
+  117 binary_expr: operand '%' . operand
+
+    IDENTIFIER  shift, and go to state 111
+    STRING      shift, and go to state 92
+    FLOATVAL    shift, and go to state 93
+    INTVAL      shift, and go to state 75
+    NOT         shift, and go to state 166
+    '-'         shift, and go to state 116
+    '*'         shift, and go to state 117
+    '('         shift, and go to state 118
+    '?'         shift, and go to state 94
+
+    operand           go to state 254
+    scalar_expr       go to state 124
+    unary_expr        go to state 125
+    binary_expr       go to state 126
+    comp_expr         go to state 132
+    function_expr     go to state 133
+    column_name       go to state 135
+    literal           go to state 136
+    string_literal    go to state 97
+    num_literal       go to state 98
+    int_literal       go to state 99
+    star_expr         go to state 137
+    placeholder_expr  go to state 100
+
+
+State 196
+
+  118 binary_expr: operand '^' . operand
+
+    IDENTIFIER  shift, and go to state 111
+    STRING      shift, and go to state 92
+    FLOATVAL    shift, and go to state 93
+    INTVAL      shift, and go to state 75
+    NOT         shift, and go to state 166
+    '-'         shift, and go to state 116
+    '*'         shift, and go to state 117
+    '('         shift, and go to state 118
+    '?'         shift, and go to state 94
+
+    operand           go to state 255
+    scalar_expr       go to state 124
+    unary_expr        go to state 125
+    binary_expr       go to state 126
+    comp_expr         go to state 132
+    function_expr     go to state 133
+    column_name       go to state 135
+    literal           go to state 136
+    string_literal    go to state 97
+    num_literal       go to state 98
+    int_literal       go to state 99
+    star_expr         go to state 137
+    placeholder_expr  go to state 100
+
+
+State 197
 
    51 update_clause: IDENTIFIER '=' . literal
 
@@ -3094,30 +3169,30 @@ State 194
     INTVAL    shift, and go to state 75
     '?'       shift, and go to state 94
 
-    literal           go to state 252
+    literal           go to state 256
     string_literal    go to state 97
     num_literal       go to state 98
     int_literal       go to state 99
     placeholder_expr  go to state 100
 
 
-State 195
+State 198
 
    50 update_clause_commalist: update_clause_commalist ',' . update_clause
 
-    IDENTIFIER  shift, and go to state 136
+    IDENTIFIER  shift, and go to state 138
 
-    update_clause  go to state 253
+    update_clause  go to state 257
 
 
-State 196
+State 199
 
    48 update_statement: UPDATE table_ref_name_no_alias SET update_clause_commalist opt_where .
 
     $default  reduce using rule 48 (update_statement)
 
 
-State 197
+State 200
 
    76 order_list: order_list ',' . order_desc
 
@@ -3128,167 +3203,169 @@ State 197
     EXISTS      shift, and go to state 112
     CASE        shift, and go to state 113
     NOT         shift, and go to state 114
-    '-'         shift, and go to state 115
-    '*'         shift, and go to state 116
-    '('         shift, and go to state 117
+    SUM         shift, and go to state 115
+    '-'         shift, and go to state 116
+    '*'         shift, and go to state 117
+    '('         shift, and go to state 118
     '?'         shift, and go to state 94
 
-    order_desc        go to state 254
-    expr              go to state 141
-    operand           go to state 122
-    scalar_expr       go to state 123
-    unary_expr        go to state 124
-    binary_expr       go to state 125
-    logic_expr        go to state 126
-    in_expr           go to state 127
-    case_expr         go to state 128
-    exists_expr       go to state 129
-    comp_expr         go to state 130
-    function_expr     go to state 131
-    between_expr      go to state 132
-    column_name       go to state 133
-    literal           go to state 134
+    order_desc        go to state 258
+    expr              go to state 143
+    operand           go to state 123
+    scalar_expr       go to state 124
+    unary_expr        go to state 125
+    binary_expr       go to state 126
+    logic_expr        go to state 127
+    in_expr           go to state 128
+    sum_expr          go to state 129
+    case_expr         go to state 130
+    exists_expr       go to state 131
+    comp_expr         go to state 132
+    function_expr     go to state 133
+    between_expr      go to state 134
+    column_name       go to state 135
+    literal           go to state 136
     string_literal    go to state 97
     num_literal       go to state 98
     int_literal       go to state 99
-    star_expr         go to state 135
+    star_expr         go to state 137
     placeholder_expr  go to state 100
 
 
-State 198
+State 201
 
    79 opt_order_type: DESC .
 
     $default  reduce using rule 79 (opt_order_type)
 
 
-State 199
+State 202
 
    78 opt_order_type: ASC .
 
     $default  reduce using rule 78 (opt_order_type)
 
 
-State 200
+State 203
 
    77 order_desc: expr opt_order_type .
 
     $default  reduce using rule 77 (order_desc)
 
 
-State 201
+State 204
 
    58 select_no_paren: select_clause set_operator select_with_paren opt_order opt_limit .
 
     $default  reduce using rule 58 (select_no_paren)
 
 
-State 202
+State 205
 
    57 select_no_paren: select_clause set_operator select_clause opt_order opt_limit .
 
     $default  reduce using rule 57 (select_no_paren)
 
 
-State 203
+State 206
 
    84 opt_limit: LIMIT int_literal OFFSET . int_literal
 
     INTVAL  shift, and go to state 75
 
-    int_literal  go to state 255
+    int_literal  go to state 259
 
 
-State 204
+State 207
 
    92 literal_list: literal_list ',' literal .
 
     $default  reduce using rule 92 (literal_list)
 
 
-State 205
+State 208
 
    18 prepare_statement: PREPARE IDENTIFIER '{' statement_list opt_semicolon '}' .
 
     $default  reduce using rule 18 (prepare_statement)
 
 
-State 206
+State 209
 
    24 create_statement: CREATE TABLE opt_not_exists table_name FROM TBL . FILE file_path
 
-    FILE  shift, and go to state 256
+    FILE  shift, and go to state 260
 
 
-State 207
+State 210
 
    33 column_def: IDENTIFIER . column_type
    34           | IDENTIFIER . column_type '(' INTVAL ')'
 
-    INTEGER  shift, and go to state 257
-    DOUBLE   shift, and go to state 258
-    TEXT     shift, and go to state 259
-    INT      shift, and go to state 260
+    INTEGER  shift, and go to state 261
+    DOUBLE   shift, and go to state 262
+    TEXT     shift, and go to state 263
+    INT      shift, and go to state 264
 
-    column_type  go to state 261
+    column_type  go to state 265
 
 
-State 208
+State 211
 
    25 create_statement: CREATE TABLE opt_not_exists table_name '(' column_def_commalist . opt_primary_key ')'
    32 column_def_commalist: column_def_commalist . ',' column_def
 
-    ','  shift, and go to state 262
+    ','  shift, and go to state 266
 
     $default  reduce using rule 30 (opt_primary_key)
 
-    opt_primary_key  go to state 263
+    opt_primary_key  go to state 267
 
 
-State 209
+State 212
 
    31 column_def_commalist: column_def .
 
     $default  reduce using rule 31 (column_def_commalist)
 
 
-State 210
+State 213
 
    26 create_statement: CREATE VIEW opt_not_exists table_name opt_column_list AS . select_statement
 
     SELECT  shift, and go to state 9
     '('     shift, and go to state 14
 
-    select_statement   go to state 264
+    select_statement   go to state 268
     select_with_paren  go to state 29
     select_no_paren    go to state 30
     select_clause      go to state 31
 
 
-State 211
+State 214
 
    21 import_statement: IMPORT FROM import_file_type FILE file_path INTO . table_name
 
     IDENTIFIER  shift, and go to state 35
 
-    table_name  go to state 265
+    table_name  go to state 269
 
 
-State 212
+State 215
 
    46 opt_column_list: '(' ident_commalist ')' .
 
     $default  reduce using rule 46 (opt_column_list)
 
 
-State 213
+State 216
 
-  179 ident_commalist: ident_commalist ',' . IDENTIFIER
+  181 ident_commalist: ident_commalist ',' . IDENTIFIER
 
-    IDENTIFIER  shift, and go to state 266
+    IDENTIFIER  shift, and go to state 270
 
 
-State 214
+State 217
 
    44 insert_statement: INSERT INTO table_name opt_column_list VALUES '(' . literal_list ')'
 
@@ -3297,7 +3374,7 @@ State 214
     INTVAL    shift, and go to state 75
     '?'       shift, and go to state 94
 
-    literal_list      go to state 267
+    literal_list      go to state 271
     literal           go to state 96
     string_literal    go to state 97
     num_literal       go to state 98
@@ -3305,9 +3382,9 @@ State 214
     placeholder_expr  go to state 100
 
 
-State 215
+State 218
 
-  135 function_expr: IDENTIFIER '(' opt_distinct . expr_list ')'
+  137 function_expr: IDENTIFIER '(' opt_distinct . expr_list ')'
 
     IDENTIFIER  shift, and go to state 111
     STRING      shift, and go to state 92
@@ -3316,276 +3393,542 @@ State 215
     EXISTS      shift, and go to state 112
     CASE        shift, and go to state 113
     NOT         shift, and go to state 114
-    '-'         shift, and go to state 115
-    '*'         shift, and go to state 116
-    '('         shift, and go to state 117
+    SUM         shift, and go to state 115
+    '-'         shift, and go to state 116
+    '*'         shift, and go to state 117
+    '('         shift, and go to state 118
     '?'         shift, and go to state 94
 
-    expr_list         go to state 268
-    expr_alias        go to state 120
-    expr              go to state 121
-    operand           go to state 122
-    scalar_expr       go to state 123
-    unary_expr        go to state 124
-    binary_expr       go to state 125
-    logic_expr        go to state 126
-    in_expr           go to state 127
-    case_expr         go to state 128
-    exists_expr       go to state 129
-    comp_expr         go to state 130
-    function_expr     go to state 131
-    between_expr      go to state 132
-    column_name       go to state 133
-    literal           go to state 134
+    expr_list         go to state 272
+    expr_alias        go to state 121
+    expr              go to state 122
+    operand           go to state 123
+    scalar_expr       go to state 124
+    unary_expr        go to state 125
+    binary_expr       go to state 126
+    logic_expr        go to state 127
+    in_expr           go to state 128
+    sum_expr          go to state 129
+    case_expr         go to state 130
+    exists_expr       go to state 131
+    comp_expr         go to state 132
+    function_expr     go to state 133
+    between_expr      go to state 134
+    column_name       go to state 135
+    literal           go to state 136
     string_literal    go to state 97
     num_literal       go to state 98
     int_literal       go to state 99
-    star_expr         go to state 135
+    star_expr         go to state 137
     placeholder_expr  go to state 100
-
-
-State 216
-
-  138 column_name: IDENTIFIER '.' IDENTIFIER .
-
-    $default  reduce using rule 138 (column_name)
-
-
-State 217
-
-  127 exists_expr: EXISTS '(' select_no_paren . ')'
-
-    ')'  shift, and go to state 269
-
-
-State 218
-
-  120 logic_expr: expr . AND expr
-  121           | expr . OR expr
-  126 case_expr: CASE WHEN expr . THEN operand ELSE operand END
-
-    THEN  shift, and go to state 270
-    AND   shift, and go to state 173
-    OR    shift, and go to state 175
 
 
 State 219
 
-  128 exists_expr: NOT EXISTS '(' . select_no_paren ')'
+  140 column_name: IDENTIFIER '.' IDENTIFIER .
 
-    SELECT  shift, and go to state 9
-
-    select_no_paren  go to state 271
-    select_clause    go to state 31
+    $default  reduce using rule 140 (column_name)
 
 
 State 220
 
-  119 binary_expr: operand NOT . LIKE operand
+  129 exists_expr: EXISTS '(' select_no_paren . ')'
 
-    LIKE  shift, and go to state 240
+    ')'  shift, and go to state 273
 
 
 State 221
 
-  105 operand: '(' select_no_paren ')' .
+  121 logic_expr: expr . AND expr
+  122           | expr . OR expr
+  128 case_expr: CASE WHEN expr . THEN operand ELSE operand END
 
-    $default  reduce using rule 105 (operand)
+    THEN  shift, and go to state 274
+    AND   shift, and go to state 176
+    OR    shift, and go to state 178
 
 
 State 222
 
-  100 operand: '(' expr ')' .
+  130 exists_expr: NOT EXISTS '(' . select_no_paren ')'
 
-    $default  reduce using rule 100 (operand)
+    SELECT  shift, and go to state 9
+
+    select_no_paren  go to state 275
+    select_clause    go to state 31
 
 
 State 223
 
-  151 table_ref_atomic: '(' . select_statement ')' opt_alias
-  173 join_table: '(' . select_statement ')' alias
+  120 binary_expr: operand NOT . LIKE operand
+
+    LIKE  shift, and go to state 244
+
+
+State 224
+
+  121 logic_expr: expr . AND expr
+  122           | expr . OR expr
+  127 sum_expr: SUM '(' expr . ')'
+
+    AND  shift, and go to state 176
+    OR   shift, and go to state 178
+    ')'  shift, and go to state 276
+
+
+State 225
+
+  106 operand: '(' select_no_paren ')' .
+
+    $default  reduce using rule 106 (operand)
+
+
+State 226
+
+  101 operand: '(' expr ')' .
+
+    $default  reduce using rule 101 (operand)
+
+
+State 227
+
+  153 table_ref_atomic: '(' . select_statement ')' opt_alias
+  175 join_table: '(' . select_statement ')' alias
 
     SELECT  shift, and go to state 9
     '('     shift, and go to state 14
 
-    select_statement   go to state 272
+    select_statement   go to state 277
     select_with_paren  go to state 29
     select_no_paren    go to state 30
     select_clause      go to state 31
 
 
-State 224
+State 228
 
    66 from_clause: FROM table_ref .
 
     $default  reduce using rule 66 (from_clause)
 
 
-State 225
-
-  148 table_ref: table_ref_atomic .
-  149          | table_ref_atomic . ',' table_ref_commalist
-
-    ','  shift, and go to state 273
-
-    $default  reduce using rule 148 (table_ref)
-
-
-State 226
-
-  150 table_ref_atomic: table_ref_name .
-  174 join_table: table_ref_name .
-
-    NATURAL   reduce using rule 174 (join_table)
-    CROSS     reduce using rule 174 (join_table)
-    INNER     reduce using rule 174 (join_table)
-    OUTER     reduce using rule 174 (join_table)
-    RIGHT     reduce using rule 174 (join_table)
-    JOIN      reduce using rule 174 (join_table)
-    LEFT      reduce using rule 174 (join_table)
-    $default  reduce using rule 150 (table_ref_atomic)
-
-
-State 227
-
-  155 table_ref_name: table_name . opt_alias
-
-    IDENTIFIER  shift, and go to state 172
-    AS          shift, and go to state 174
-
-    $default  reduce using rule 162 (opt_alias)
-
-    alias      go to state 176
-    opt_alias  go to state 274
-
-
-State 228
-
-  152 table_ref_atomic: join_clause .
-
-    $default  reduce using rule 152 (table_ref_atomic)
-
-
 State 229
 
-  163 join_clause: join_table . opt_join_type JOIN join_table ON join_condition
+  150 table_ref: table_ref_atomic .
+  151          | table_ref_atomic . ',' table_ref_commalist
 
-    NATURAL  shift, and go to state 275
-    CROSS    shift, and go to state 276
-    INNER    shift, and go to state 277
-    OUTER    shift, and go to state 278
-    RIGHT    shift, and go to state 279
-    LEFT     shift, and go to state 280
+    ','  shift, and go to state 278
 
-    $default  reduce using rule 172 (opt_join_type)
-
-    opt_join_type  go to state 281
+    $default  reduce using rule 150 (table_ref)
 
 
 State 230
 
-   62 select_clause: SELECT opt_top opt_distinct select_list from_clause opt_where . opt_group
+  152 table_ref_atomic: table_ref_name .
+  176 join_table: table_ref_name .
 
-    GROUP  shift, and go to state 282
-
-    $default  reduce using rule 70 (opt_group)
-
-    opt_group  go to state 283
+    NATURAL   reduce using rule 176 (join_table)
+    CROSS     reduce using rule 176 (join_table)
+    INNER     reduce using rule 176 (join_table)
+    OUTER     reduce using rule 176 (join_table)
+    RIGHT     reduce using rule 176 (join_table)
+    JOIN      reduce using rule 176 (join_table)
+    LEFT      reduce using rule 176 (join_table)
+    $default  reduce using rule 152 (table_ref_atomic)
 
 
 State 231
+
+  157 table_ref_name: table_name . opt_alias
+
+    IDENTIFIER  shift, and go to state 175
+    AS          shift, and go to state 177
+
+    $default  reduce using rule 164 (opt_alias)
+
+    alias      go to state 179
+    opt_alias  go to state 279
+
+
+State 232
+
+  154 table_ref_atomic: join_clause .
+
+    $default  reduce using rule 154 (table_ref_atomic)
+
+
+State 233
+
+  165 join_clause: join_table . opt_join_type JOIN join_table ON join_condition
+
+    NATURAL  shift, and go to state 280
+    CROSS    shift, and go to state 281
+    INNER    shift, and go to state 282
+    OUTER    shift, and go to state 283
+    RIGHT    shift, and go to state 284
+    LEFT     shift, and go to state 285
+
+    $default  reduce using rule 174 (opt_join_type)
+
+    opt_join_type  go to state 286
+
+
+State 234
+
+   62 select_clause: SELECT opt_top opt_distinct select_list from_clause opt_where . opt_group
+
+    GROUP  shift, and go to state 287
+
+    $default  reduce using rule 70 (opt_group)
+
+    opt_group  go to state 288
+
+
+State 235
 
    90 expr_list: expr_list ',' expr_alias .
 
     $default  reduce using rule 90 (expr_list)
 
 
-State 232
+State 236
 
-  120 logic_expr: expr . AND expr
-  120           | expr AND expr .
-  121           | expr . OR expr
-
-    $default  reduce using rule 120 (logic_expr)
-
-
-State 233
-
-  159 alias: AS IDENTIFIER .
-
-    $default  reduce using rule 159 (alias)
-
-
-State 234
-
-  120 logic_expr: expr . AND expr
-  121           | expr . OR expr
-  121           | expr OR expr .
-
-    AND  shift, and go to state 173
+  121 logic_expr: expr . AND expr
+  121           | expr AND expr .
+  122           | expr . OR expr
 
     $default  reduce using rule 121 (logic_expr)
 
 
-State 235
+State 237
 
-  112 binary_expr: operand . '-' operand
-  113            | operand . '+' operand
-  114            | operand . '/' operand
-  115            | operand . '*' operand
-  116            | operand . '%' operand
-  117            | operand . '^' operand
-  118            | operand . LIKE operand
-  119            | operand . NOT LIKE operand
-  129 comp_expr: operand . '=' operand
-  130          | operand . NOTEQUALS operand
-  130          | operand NOTEQUALS operand .
-  131          | operand . '<' operand
-  132          | operand . '>' operand
-  133          | operand . LESSEQ operand
-  134          | operand . GREATEREQ operand
+  161 alias: AS IDENTIFIER .
 
-    NOTEQUALS  shift, and go to state 178
-    LESSEQ     shift, and go to state 179
-    GREATEREQ  shift, and go to state 180
-    LIKE       shift, and go to state 182
-    '='        shift, and go to state 185
-    '<'        shift, and go to state 186
-    '>'        shift, and go to state 187
-    '+'        shift, and go to state 188
-    '-'        shift, and go to state 189
-    '*'        shift, and go to state 190
-    '/'        shift, and go to state 191
-    '%'        shift, and go to state 192
-    '^'        shift, and go to state 193
-
-    $default  reduce using rule 130 (comp_expr)
+    $default  reduce using rule 161 (alias)
 
 
-State 236
+State 238
 
-  112 binary_expr: operand . '-' operand
-  113            | operand . '+' operand
-  114            | operand . '/' operand
-  115            | operand . '*' operand
-  116            | operand . '%' operand
-  117            | operand . '^' operand
-  118            | operand . LIKE operand
-  119            | operand . NOT LIKE operand
-  129 comp_expr: operand . '=' operand
-  130          | operand . NOTEQUALS operand
-  131          | operand . '<' operand
-  132          | operand . '>' operand
-  133          | operand . LESSEQ operand
-  133          | operand LESSEQ operand .
-  134          | operand . GREATEREQ operand
+  121 logic_expr: expr . AND expr
+  122           | expr . OR expr
+  122           | expr OR expr .
 
-    '+'  shift, and go to state 188
-    '-'  shift, and go to state 189
-    '*'  shift, and go to state 190
-    '/'  shift, and go to state 191
-    '%'  shift, and go to state 192
-    '^'  shift, and go to state 193
+    AND  shift, and go to state 176
+
+    $default  reduce using rule 122 (logic_expr)
+
+
+State 239
+
+  113 binary_expr: operand . '-' operand
+  114            | operand . '+' operand
+  115            | operand . '/' operand
+  116            | operand . '*' operand
+  117            | operand . '%' operand
+  118            | operand . '^' operand
+  119            | operand . LIKE operand
+  120            | operand . NOT LIKE operand
+  131 comp_expr: operand . '=' operand
+  132          | operand . NOTEQUALS operand
+  132          | operand NOTEQUALS operand .
+  133          | operand . '<' operand
+  134          | operand . '>' operand
+  135          | operand . LESSEQ operand
+  136          | operand . GREATEREQ operand
+
+    NOTEQUALS  shift, and go to state 181
+    LESSEQ     shift, and go to state 182
+    GREATEREQ  shift, and go to state 183
+    LIKE       shift, and go to state 185
+    '='        shift, and go to state 188
+    '<'        shift, and go to state 189
+    '>'        shift, and go to state 190
+    '+'        shift, and go to state 191
+    '-'        shift, and go to state 192
+    '*'        shift, and go to state 193
+    '/'        shift, and go to state 194
+    '%'        shift, and go to state 195
+    '^'        shift, and go to state 196
+
+    $default  reduce using rule 132 (comp_expr)
+
+
+State 240
+
+  113 binary_expr: operand . '-' operand
+  114            | operand . '+' operand
+  115            | operand . '/' operand
+  116            | operand . '*' operand
+  117            | operand . '%' operand
+  118            | operand . '^' operand
+  119            | operand . LIKE operand
+  120            | operand . NOT LIKE operand
+  131 comp_expr: operand . '=' operand
+  132          | operand . NOTEQUALS operand
+  133          | operand . '<' operand
+  134          | operand . '>' operand
+  135          | operand . LESSEQ operand
+  135          | operand LESSEQ operand .
+  136          | operand . GREATEREQ operand
+
+    '+'  shift, and go to state 191
+    '-'  shift, and go to state 192
+    '*'  shift, and go to state 193
+    '/'  shift, and go to state 194
+    '%'  shift, and go to state 195
+    '^'  shift, and go to state 196
+
+    LESSEQ     error (nonassociative)
+    GREATEREQ  error (nonassociative)
+    '<'        error (nonassociative)
+    '>'        error (nonassociative)
+
+    $default  reduce using rule 135 (comp_expr)
+
+
+State 241
+
+  113 binary_expr: operand . '-' operand
+  114            | operand . '+' operand
+  115            | operand . '/' operand
+  116            | operand . '*' operand
+  117            | operand . '%' operand
+  118            | operand . '^' operand
+  119            | operand . LIKE operand
+  120            | operand . NOT LIKE operand
+  131 comp_expr: operand . '=' operand
+  132          | operand . NOTEQUALS operand
+  133          | operand . '<' operand
+  134          | operand . '>' operand
+  135          | operand . LESSEQ operand
+  136          | operand . GREATEREQ operand
+  136          | operand GREATEREQ operand .
+
+    '+'  shift, and go to state 191
+    '-'  shift, and go to state 192
+    '*'  shift, and go to state 193
+    '/'  shift, and go to state 194
+    '%'  shift, and go to state 195
+    '^'  shift, and go to state 196
+
+    LESSEQ     error (nonassociative)
+    GREATEREQ  error (nonassociative)
+    '<'        error (nonassociative)
+    '>'        error (nonassociative)
+
+    $default  reduce using rule 136 (comp_expr)
+
+
+State 242
+
+  113 binary_expr: operand . '-' operand
+  114            | operand . '+' operand
+  115            | operand . '/' operand
+  116            | operand . '*' operand
+  117            | operand . '%' operand
+  118            | operand . '^' operand
+  119            | operand . LIKE operand
+  120            | operand . NOT LIKE operand
+  131 comp_expr: operand . '=' operand
+  132          | operand . NOTEQUALS operand
+  133          | operand . '<' operand
+  134          | operand . '>' operand
+  135          | operand . LESSEQ operand
+  136          | operand . GREATEREQ operand
+  138 between_expr: operand BETWEEN operand . AND operand
+
+    NOTEQUALS  shift, and go to state 181
+    LESSEQ     shift, and go to state 182
+    GREATEREQ  shift, and go to state 183
+    LIKE       shift, and go to state 185
+    AND        shift, and go to state 289
+    NOT        shift, and go to state 223
+    '='        shift, and go to state 188
+    '<'        shift, and go to state 189
+    '>'        shift, and go to state 190
+    '+'        shift, and go to state 191
+    '-'        shift, and go to state 192
+    '*'        shift, and go to state 193
+    '/'        shift, and go to state 194
+    '%'        shift, and go to state 195
+    '^'        shift, and go to state 196
+
+
+State 243
+
+  113 binary_expr: operand . '-' operand
+  114            | operand . '+' operand
+  115            | operand . '/' operand
+  116            | operand . '*' operand
+  117            | operand . '%' operand
+  118            | operand . '^' operand
+  119            | operand . LIKE operand
+  119            | operand LIKE operand .
+  120            | operand . NOT LIKE operand
+  131 comp_expr: operand . '=' operand
+  132          | operand . NOTEQUALS operand
+  133          | operand . '<' operand
+  134          | operand . '>' operand
+  135          | operand . LESSEQ operand
+  136          | operand . GREATEREQ operand
+
+    NOTEQUALS  shift, and go to state 181
+    LESSEQ     shift, and go to state 182
+    GREATEREQ  shift, and go to state 183
+    LIKE       shift, and go to state 185
+    '='        shift, and go to state 188
+    '<'        shift, and go to state 189
+    '>'        shift, and go to state 190
+    '+'        shift, and go to state 191
+    '-'        shift, and go to state 192
+    '*'        shift, and go to state 193
+    '/'        shift, and go to state 194
+    '%'        shift, and go to state 195
+    '^'        shift, and go to state 196
+
+    $default  reduce using rule 119 (binary_expr)
+
+
+State 244
+
+  120 binary_expr: operand NOT LIKE . operand
+
+    IDENTIFIER  shift, and go to state 111
+    STRING      shift, and go to state 92
+    FLOATVAL    shift, and go to state 93
+    INTVAL      shift, and go to state 75
+    NOT         shift, and go to state 166
+    '-'         shift, and go to state 116
+    '*'         shift, and go to state 117
+    '('         shift, and go to state 118
+    '?'         shift, and go to state 94
+
+    operand           go to state 290
+    scalar_expr       go to state 124
+    unary_expr        go to state 125
+    binary_expr       go to state 126
+    comp_expr         go to state 132
+    function_expr     go to state 133
+    column_name       go to state 135
+    literal           go to state 136
+    string_literal    go to state 97
+    num_literal       go to state 98
+    int_literal       go to state 99
+    star_expr         go to state 137
+    placeholder_expr  go to state 100
+
+
+State 245
+
+  124 in_expr: operand NOT IN . '(' expr_list ')'
+  126        | operand NOT IN . '(' select_no_paren ')'
+
+    '('  shift, and go to state 291
+
+
+State 246
+
+  123 in_expr: operand IN '(' . expr_list ')'
+  125        | operand IN '(' . select_no_paren ')'
+
+    IDENTIFIER  shift, and go to state 111
+    STRING      shift, and go to state 92
+    FLOATVAL    shift, and go to state 93
+    INTVAL      shift, and go to state 75
+    EXISTS      shift, and go to state 112
+    SELECT      shift, and go to state 9
+    CASE        shift, and go to state 113
+    NOT         shift, and go to state 114
+    SUM         shift, and go to state 115
+    '-'         shift, and go to state 116
+    '*'         shift, and go to state 117
+    '('         shift, and go to state 118
+    '?'         shift, and go to state 94
+
+    select_no_paren   go to state 292
+    select_clause     go to state 31
+    expr_list         go to state 293
+    expr_alias        go to state 121
+    expr              go to state 122
+    operand           go to state 123
+    scalar_expr       go to state 124
+    unary_expr        go to state 125
+    binary_expr       go to state 126
+    logic_expr        go to state 127
+    in_expr           go to state 128
+    sum_expr          go to state 129
+    case_expr         go to state 130
+    exists_expr       go to state 131
+    comp_expr         go to state 132
+    function_expr     go to state 133
+    between_expr      go to state 134
+    column_name       go to state 135
+    literal           go to state 136
+    string_literal    go to state 97
+    num_literal       go to state 98
+    int_literal       go to state 99
+    star_expr         go to state 137
+    placeholder_expr  go to state 100
+
+
+State 247
+
+  113 binary_expr: operand . '-' operand
+  114            | operand . '+' operand
+  115            | operand . '/' operand
+  116            | operand . '*' operand
+  117            | operand . '%' operand
+  118            | operand . '^' operand
+  119            | operand . LIKE operand
+  120            | operand . NOT LIKE operand
+  131 comp_expr: operand . '=' operand
+  131          | operand '=' operand .
+  132          | operand . NOTEQUALS operand
+  133          | operand . '<' operand
+  134          | operand . '>' operand
+  135          | operand . LESSEQ operand
+  136          | operand . GREATEREQ operand
+
+    NOTEQUALS  shift, and go to state 181
+    LESSEQ     shift, and go to state 182
+    GREATEREQ  shift, and go to state 183
+    LIKE       shift, and go to state 185
+    '='        shift, and go to state 188
+    '<'        shift, and go to state 189
+    '>'        shift, and go to state 190
+    '+'        shift, and go to state 191
+    '-'        shift, and go to state 192
+    '*'        shift, and go to state 193
+    '/'        shift, and go to state 194
+    '%'        shift, and go to state 195
+    '^'        shift, and go to state 196
+
+    $default  reduce using rule 131 (comp_expr)
+
+
+State 248
+
+  113 binary_expr: operand . '-' operand
+  114            | operand . '+' operand
+  115            | operand . '/' operand
+  116            | operand . '*' operand
+  117            | operand . '%' operand
+  118            | operand . '^' operand
+  119            | operand . LIKE operand
+  120            | operand . NOT LIKE operand
+  131 comp_expr: operand . '=' operand
+  132          | operand . NOTEQUALS operand
+  133          | operand . '<' operand
+  133          | operand '<' operand .
+  134          | operand . '>' operand
+  135          | operand . LESSEQ operand
+  136          | operand . GREATEREQ operand
+
+    '+'  shift, and go to state 191
+    '-'  shift, and go to state 192
+    '*'  shift, and go to state 193
+    '/'  shift, and go to state 194
+    '%'  shift, and go to state 195
+    '^'  shift, and go to state 196
 
     LESSEQ     error (nonassociative)
     GREATEREQ  error (nonassociative)
@@ -3595,30 +3938,30 @@ State 236
     $default  reduce using rule 133 (comp_expr)
 
 
-State 237
+State 249
 
-  112 binary_expr: operand . '-' operand
-  113            | operand . '+' operand
-  114            | operand . '/' operand
-  115            | operand . '*' operand
-  116            | operand . '%' operand
-  117            | operand . '^' operand
-  118            | operand . LIKE operand
-  119            | operand . NOT LIKE operand
-  129 comp_expr: operand . '=' operand
-  130          | operand . NOTEQUALS operand
-  131          | operand . '<' operand
-  132          | operand . '>' operand
-  133          | operand . LESSEQ operand
-  134          | operand . GREATEREQ operand
-  134          | operand GREATEREQ operand .
+  113 binary_expr: operand . '-' operand
+  114            | operand . '+' operand
+  115            | operand . '/' operand
+  116            | operand . '*' operand
+  117            | operand . '%' operand
+  118            | operand . '^' operand
+  119            | operand . LIKE operand
+  120            | operand . NOT LIKE operand
+  131 comp_expr: operand . '=' operand
+  132          | operand . NOTEQUALS operand
+  133          | operand . '<' operand
+  134          | operand . '>' operand
+  134          | operand '>' operand .
+  135          | operand . LESSEQ operand
+  136          | operand . GREATEREQ operand
 
-    '+'  shift, and go to state 188
-    '-'  shift, and go to state 189
-    '*'  shift, and go to state 190
-    '/'  shift, and go to state 191
-    '%'  shift, and go to state 192
-    '^'  shift, and go to state 193
+    '+'  shift, and go to state 191
+    '-'  shift, and go to state 192
+    '*'  shift, and go to state 193
+    '/'  shift, and go to state 194
+    '%'  shift, and go to state 195
+    '^'  shift, and go to state 196
 
     LESSEQ     error (nonassociative)
     GREATEREQ  error (nonassociative)
@@ -3628,742 +3971,498 @@ State 237
     $default  reduce using rule 134 (comp_expr)
 
 
-State 238
+State 250
 
-  112 binary_expr: operand . '-' operand
-  113            | operand . '+' operand
-  114            | operand . '/' operand
-  115            | operand . '*' operand
-  116            | operand . '%' operand
-  117            | operand . '^' operand
-  118            | operand . LIKE operand
-  119            | operand . NOT LIKE operand
-  129 comp_expr: operand . '=' operand
-  130          | operand . NOTEQUALS operand
-  131          | operand . '<' operand
-  132          | operand . '>' operand
-  133          | operand . LESSEQ operand
-  134          | operand . GREATEREQ operand
-  136 between_expr: operand BETWEEN operand . AND operand
+  113 binary_expr: operand . '-' operand
+  114            | operand . '+' operand
+  114            | operand '+' operand .
+  115            | operand . '/' operand
+  116            | operand . '*' operand
+  117            | operand . '%' operand
+  118            | operand . '^' operand
+  119            | operand . LIKE operand
+  120            | operand . NOT LIKE operand
+  131 comp_expr: operand . '=' operand
+  132          | operand . NOTEQUALS operand
+  133          | operand . '<' operand
+  134          | operand . '>' operand
+  135          | operand . LESSEQ operand
+  136          | operand . GREATEREQ operand
 
-    NOTEQUALS  shift, and go to state 178
-    LESSEQ     shift, and go to state 179
-    GREATEREQ  shift, and go to state 180
-    LIKE       shift, and go to state 182
-    AND        shift, and go to state 284
-    NOT        shift, and go to state 220
-    '='        shift, and go to state 185
-    '<'        shift, and go to state 186
-    '>'        shift, and go to state 187
-    '+'        shift, and go to state 188
-    '-'        shift, and go to state 189
-    '*'        shift, and go to state 190
-    '/'        shift, and go to state 191
-    '%'        shift, and go to state 192
-    '^'        shift, and go to state 193
-
-
-State 239
-
-  112 binary_expr: operand . '-' operand
-  113            | operand . '+' operand
-  114            | operand . '/' operand
-  115            | operand . '*' operand
-  116            | operand . '%' operand
-  117            | operand . '^' operand
-  118            | operand . LIKE operand
-  118            | operand LIKE operand .
-  119            | operand . NOT LIKE operand
-  129 comp_expr: operand . '=' operand
-  130          | operand . NOTEQUALS operand
-  131          | operand . '<' operand
-  132          | operand . '>' operand
-  133          | operand . LESSEQ operand
-  134          | operand . GREATEREQ operand
-
-    NOTEQUALS  shift, and go to state 178
-    LESSEQ     shift, and go to state 179
-    GREATEREQ  shift, and go to state 180
-    LIKE       shift, and go to state 182
-    '='        shift, and go to state 185
-    '<'        shift, and go to state 186
-    '>'        shift, and go to state 187
-    '+'        shift, and go to state 188
-    '-'        shift, and go to state 189
-    '*'        shift, and go to state 190
-    '/'        shift, and go to state 191
-    '%'        shift, and go to state 192
-    '^'        shift, and go to state 193
-
-    $default  reduce using rule 118 (binary_expr)
-
-
-State 240
-
-  119 binary_expr: operand NOT LIKE . operand
-
-    IDENTIFIER  shift, and go to state 111
-    STRING      shift, and go to state 92
-    FLOATVAL    shift, and go to state 93
-    INTVAL      shift, and go to state 75
-    NOT         shift, and go to state 164
-    '-'         shift, and go to state 115
-    '*'         shift, and go to state 116
-    '('         shift, and go to state 117
-    '?'         shift, and go to state 94
-
-    operand           go to state 285
-    scalar_expr       go to state 123
-    unary_expr        go to state 124
-    binary_expr       go to state 125
-    comp_expr         go to state 130
-    function_expr     go to state 131
-    column_name       go to state 133
-    literal           go to state 134
-    string_literal    go to state 97
-    num_literal       go to state 98
-    int_literal       go to state 99
-    star_expr         go to state 135
-    placeholder_expr  go to state 100
-
-
-State 241
-
-  123 in_expr: operand NOT IN . '(' expr_list ')'
-  125        | operand NOT IN . '(' select_no_paren ')'
-
-    '('  shift, and go to state 286
-
-
-State 242
-
-  122 in_expr: operand IN '(' . expr_list ')'
-  124        | operand IN '(' . select_no_paren ')'
-
-    IDENTIFIER  shift, and go to state 111
-    STRING      shift, and go to state 92
-    FLOATVAL    shift, and go to state 93
-    INTVAL      shift, and go to state 75
-    EXISTS      shift, and go to state 112
-    SELECT      shift, and go to state 9
-    CASE        shift, and go to state 113
-    NOT         shift, and go to state 114
-    '-'         shift, and go to state 115
-    '*'         shift, and go to state 116
-    '('         shift, and go to state 117
-    '?'         shift, and go to state 94
-
-    select_no_paren   go to state 287
-    select_clause     go to state 31
-    expr_list         go to state 288
-    expr_alias        go to state 120
-    expr              go to state 121
-    operand           go to state 122
-    scalar_expr       go to state 123
-    unary_expr        go to state 124
-    binary_expr       go to state 125
-    logic_expr        go to state 126
-    in_expr           go to state 127
-    case_expr         go to state 128
-    exists_expr       go to state 129
-    comp_expr         go to state 130
-    function_expr     go to state 131
-    between_expr      go to state 132
-    column_name       go to state 133
-    literal           go to state 134
-    string_literal    go to state 97
-    num_literal       go to state 98
-    int_literal       go to state 99
-    star_expr         go to state 135
-    placeholder_expr  go to state 100
-
-
-State 243
-
-  112 binary_expr: operand . '-' operand
-  113            | operand . '+' operand
-  114            | operand . '/' operand
-  115            | operand . '*' operand
-  116            | operand . '%' operand
-  117            | operand . '^' operand
-  118            | operand . LIKE operand
-  119            | operand . NOT LIKE operand
-  129 comp_expr: operand . '=' operand
-  129          | operand '=' operand .
-  130          | operand . NOTEQUALS operand
-  131          | operand . '<' operand
-  132          | operand . '>' operand
-  133          | operand . LESSEQ operand
-  134          | operand . GREATEREQ operand
-
-    NOTEQUALS  shift, and go to state 178
-    LESSEQ     shift, and go to state 179
-    GREATEREQ  shift, and go to state 180
-    LIKE       shift, and go to state 182
-    '='        shift, and go to state 185
-    '<'        shift, and go to state 186
-    '>'        shift, and go to state 187
-    '+'        shift, and go to state 188
-    '-'        shift, and go to state 189
-    '*'        shift, and go to state 190
-    '/'        shift, and go to state 191
-    '%'        shift, and go to state 192
-    '^'        shift, and go to state 193
-
-    $default  reduce using rule 129 (comp_expr)
-
-
-State 244
-
-  112 binary_expr: operand . '-' operand
-  113            | operand . '+' operand
-  114            | operand . '/' operand
-  115            | operand . '*' operand
-  116            | operand . '%' operand
-  117            | operand . '^' operand
-  118            | operand . LIKE operand
-  119            | operand . NOT LIKE operand
-  129 comp_expr: operand . '=' operand
-  130          | operand . NOTEQUALS operand
-  131          | operand . '<' operand
-  131          | operand '<' operand .
-  132          | operand . '>' operand
-  133          | operand . LESSEQ operand
-  134          | operand . GREATEREQ operand
-
-    '+'  shift, and go to state 188
-    '-'  shift, and go to state 189
-    '*'  shift, and go to state 190
-    '/'  shift, and go to state 191
-    '%'  shift, and go to state 192
-    '^'  shift, and go to state 193
-
-    LESSEQ     error (nonassociative)
-    GREATEREQ  error (nonassociative)
-    '<'        error (nonassociative)
-    '>'        error (nonassociative)
-
-    $default  reduce using rule 131 (comp_expr)
-
-
-State 245
-
-  112 binary_expr: operand . '-' operand
-  113            | operand . '+' operand
-  114            | operand . '/' operand
-  115            | operand . '*' operand
-  116            | operand . '%' operand
-  117            | operand . '^' operand
-  118            | operand . LIKE operand
-  119            | operand . NOT LIKE operand
-  129 comp_expr: operand . '=' operand
-  130          | operand . NOTEQUALS operand
-  131          | operand . '<' operand
-  132          | operand . '>' operand
-  132          | operand '>' operand .
-  133          | operand . LESSEQ operand
-  134          | operand . GREATEREQ operand
-
-    '+'  shift, and go to state 188
-    '-'  shift, and go to state 189
-    '*'  shift, and go to state 190
-    '/'  shift, and go to state 191
-    '%'  shift, and go to state 192
-    '^'  shift, and go to state 193
-
-    LESSEQ     error (nonassociative)
-    GREATEREQ  error (nonassociative)
-    '<'        error (nonassociative)
-    '>'        error (nonassociative)
-
-    $default  reduce using rule 132 (comp_expr)
-
-
-State 246
-
-  112 binary_expr: operand . '-' operand
-  113            | operand . '+' operand
-  113            | operand '+' operand .
-  114            | operand . '/' operand
-  115            | operand . '*' operand
-  116            | operand . '%' operand
-  117            | operand . '^' operand
-  118            | operand . LIKE operand
-  119            | operand . NOT LIKE operand
-  129 comp_expr: operand . '=' operand
-  130          | operand . NOTEQUALS operand
-  131          | operand . '<' operand
-  132          | operand . '>' operand
-  133          | operand . LESSEQ operand
-  134          | operand . GREATEREQ operand
-
-    '*'  shift, and go to state 190
-    '/'  shift, and go to state 191
-    '%'  shift, and go to state 192
-    '^'  shift, and go to state 193
-
-    $default  reduce using rule 113 (binary_expr)
-
-
-State 247
-
-  112 binary_expr: operand . '-' operand
-  112            | operand '-' operand .
-  113            | operand . '+' operand
-  114            | operand . '/' operand
-  115            | operand . '*' operand
-  116            | operand . '%' operand
-  117            | operand . '^' operand
-  118            | operand . LIKE operand
-  119            | operand . NOT LIKE operand
-  129 comp_expr: operand . '=' operand
-  130          | operand . NOTEQUALS operand
-  131          | operand . '<' operand
-  132          | operand . '>' operand
-  133          | operand . LESSEQ operand
-  134          | operand . GREATEREQ operand
-
-    '*'  shift, and go to state 190
-    '/'  shift, and go to state 191
-    '%'  shift, and go to state 192
-    '^'  shift, and go to state 193
-
-    $default  reduce using rule 112 (binary_expr)
-
-
-State 248
-
-  112 binary_expr: operand . '-' operand
-  113            | operand . '+' operand
-  114            | operand . '/' operand
-  115            | operand . '*' operand
-  115            | operand '*' operand .
-  116            | operand . '%' operand
-  117            | operand . '^' operand
-  118            | operand . LIKE operand
-  119            | operand . NOT LIKE operand
-  129 comp_expr: operand . '=' operand
-  130          | operand . NOTEQUALS operand
-  131          | operand . '<' operand
-  132          | operand . '>' operand
-  133          | operand . LESSEQ operand
-  134          | operand . GREATEREQ operand
-
-    '^'  shift, and go to state 193
-
-    $default  reduce using rule 115 (binary_expr)
-
-
-State 249
-
-  112 binary_expr: operand . '-' operand
-  113            | operand . '+' operand
-  114            | operand . '/' operand
-  114            | operand '/' operand .
-  115            | operand . '*' operand
-  116            | operand . '%' operand
-  117            | operand . '^' operand
-  118            | operand . LIKE operand
-  119            | operand . NOT LIKE operand
-  129 comp_expr: operand . '=' operand
-  130          | operand . NOTEQUALS operand
-  131          | operand . '<' operand
-  132          | operand . '>' operand
-  133          | operand . LESSEQ operand
-  134          | operand . GREATEREQ operand
-
-    '^'  shift, and go to state 193
+    '*'  shift, and go to state 193
+    '/'  shift, and go to state 194
+    '%'  shift, and go to state 195
+    '^'  shift, and go to state 196
 
     $default  reduce using rule 114 (binary_expr)
 
 
-State 250
+State 251
 
-  112 binary_expr: operand . '-' operand
-  113            | operand . '+' operand
-  114            | operand . '/' operand
-  115            | operand . '*' operand
-  116            | operand . '%' operand
-  116            | operand '%' operand .
-  117            | operand . '^' operand
-  118            | operand . LIKE operand
-  119            | operand . NOT LIKE operand
-  129 comp_expr: operand . '=' operand
-  130          | operand . NOTEQUALS operand
-  131          | operand . '<' operand
-  132          | operand . '>' operand
-  133          | operand . LESSEQ operand
-  134          | operand . GREATEREQ operand
+  113 binary_expr: operand . '-' operand
+  113            | operand '-' operand .
+  114            | operand . '+' operand
+  115            | operand . '/' operand
+  116            | operand . '*' operand
+  117            | operand . '%' operand
+  118            | operand . '^' operand
+  119            | operand . LIKE operand
+  120            | operand . NOT LIKE operand
+  131 comp_expr: operand . '=' operand
+  132          | operand . NOTEQUALS operand
+  133          | operand . '<' operand
+  134          | operand . '>' operand
+  135          | operand . LESSEQ operand
+  136          | operand . GREATEREQ operand
 
-    '^'  shift, and go to state 193
+    '*'  shift, and go to state 193
+    '/'  shift, and go to state 194
+    '%'  shift, and go to state 195
+    '^'  shift, and go to state 196
+
+    $default  reduce using rule 113 (binary_expr)
+
+
+State 252
+
+  113 binary_expr: operand . '-' operand
+  114            | operand . '+' operand
+  115            | operand . '/' operand
+  116            | operand . '*' operand
+  116            | operand '*' operand .
+  117            | operand . '%' operand
+  118            | operand . '^' operand
+  119            | operand . LIKE operand
+  120            | operand . NOT LIKE operand
+  131 comp_expr: operand . '=' operand
+  132          | operand . NOTEQUALS operand
+  133          | operand . '<' operand
+  134          | operand . '>' operand
+  135          | operand . LESSEQ operand
+  136          | operand . GREATEREQ operand
+
+    '^'  shift, and go to state 196
 
     $default  reduce using rule 116 (binary_expr)
 
 
-State 251
+State 253
 
-  112 binary_expr: operand . '-' operand
-  113            | operand . '+' operand
-  114            | operand . '/' operand
-  115            | operand . '*' operand
-  116            | operand . '%' operand
-  117            | operand . '^' operand
-  117            | operand '^' operand .
-  118            | operand . LIKE operand
-  119            | operand . NOT LIKE operand
-  129 comp_expr: operand . '=' operand
-  130          | operand . NOTEQUALS operand
-  131          | operand . '<' operand
-  132          | operand . '>' operand
-  133          | operand . LESSEQ operand
-  134          | operand . GREATEREQ operand
+  113 binary_expr: operand . '-' operand
+  114            | operand . '+' operand
+  115            | operand . '/' operand
+  115            | operand '/' operand .
+  116            | operand . '*' operand
+  117            | operand . '%' operand
+  118            | operand . '^' operand
+  119            | operand . LIKE operand
+  120            | operand . NOT LIKE operand
+  131 comp_expr: operand . '=' operand
+  132          | operand . NOTEQUALS operand
+  133          | operand . '<' operand
+  134          | operand . '>' operand
+  135          | operand . LESSEQ operand
+  136          | operand . GREATEREQ operand
+
+    '^'  shift, and go to state 196
+
+    $default  reduce using rule 115 (binary_expr)
+
+
+State 254
+
+  113 binary_expr: operand . '-' operand
+  114            | operand . '+' operand
+  115            | operand . '/' operand
+  116            | operand . '*' operand
+  117            | operand . '%' operand
+  117            | operand '%' operand .
+  118            | operand . '^' operand
+  119            | operand . LIKE operand
+  120            | operand . NOT LIKE operand
+  131 comp_expr: operand . '=' operand
+  132          | operand . NOTEQUALS operand
+  133          | operand . '<' operand
+  134          | operand . '>' operand
+  135          | operand . LESSEQ operand
+  136          | operand . GREATEREQ operand
+
+    '^'  shift, and go to state 196
 
     $default  reduce using rule 117 (binary_expr)
 
 
-State 252
+State 255
+
+  113 binary_expr: operand . '-' operand
+  114            | operand . '+' operand
+  115            | operand . '/' operand
+  116            | operand . '*' operand
+  117            | operand . '%' operand
+  118            | operand . '^' operand
+  118            | operand '^' operand .
+  119            | operand . LIKE operand
+  120            | operand . NOT LIKE operand
+  131 comp_expr: operand . '=' operand
+  132          | operand . NOTEQUALS operand
+  133          | operand . '<' operand
+  134          | operand . '>' operand
+  135          | operand . LESSEQ operand
+  136          | operand . GREATEREQ operand
+
+    $default  reduce using rule 118 (binary_expr)
+
+
+State 256
 
    51 update_clause: IDENTIFIER '=' literal .
 
     $default  reduce using rule 51 (update_clause)
 
 
-State 253
+State 257
 
    50 update_clause_commalist: update_clause_commalist ',' update_clause .
 
     $default  reduce using rule 50 (update_clause_commalist)
 
 
-State 254
+State 258
 
    76 order_list: order_list ',' order_desc .
 
     $default  reduce using rule 76 (order_list)
 
 
-State 255
+State 259
 
    84 opt_limit: LIMIT int_literal OFFSET int_literal .
 
     $default  reduce using rule 84 (opt_limit)
 
 
-State 256
+State 260
 
    24 create_statement: CREATE TABLE opt_not_exists table_name FROM TBL FILE . file_path
 
     STRING  shift, and go to state 92
 
-    file_path       go to state 289
-    string_literal  go to state 154
+    file_path       go to state 294
+    string_literal  go to state 156
 
 
-State 257
+State 261
 
    36 column_type: INTEGER .
 
     $default  reduce using rule 36 (column_type)
 
 
-State 258
+State 262
 
    37 column_type: DOUBLE .
 
     $default  reduce using rule 37 (column_type)
 
 
-State 259
+State 263
 
    38 column_type: TEXT .
 
     $default  reduce using rule 38 (column_type)
 
 
-State 260
+State 264
 
    35 column_type: INT .
 
     $default  reduce using rule 35 (column_type)
 
 
-State 261
+State 265
 
    33 column_def: IDENTIFIER column_type .
    34           | IDENTIFIER column_type . '(' INTVAL ')'
 
-    '('  shift, and go to state 290
+    '('  shift, and go to state 295
 
     $default  reduce using rule 33 (column_def)
 
 
-State 262
+State 266
 
    29 opt_primary_key: ',' . PRIMARY KEY '(' IDENTIFIER ')'
    32 column_def_commalist: column_def_commalist ',' . column_def
 
-    IDENTIFIER  shift, and go to state 207
-    PRIMARY     shift, and go to state 291
+    IDENTIFIER  shift, and go to state 210
+    PRIMARY     shift, and go to state 296
 
-    column_def  go to state 292
+    column_def  go to state 297
 
 
-State 263
+State 267
 
    25 create_statement: CREATE TABLE opt_not_exists table_name '(' column_def_commalist opt_primary_key . ')'
 
-    ')'  shift, and go to state 293
+    ')'  shift, and go to state 298
 
 
-State 264
+State 268
 
    26 create_statement: CREATE VIEW opt_not_exists table_name opt_column_list AS select_statement .
 
     $default  reduce using rule 26 (create_statement)
 
 
-State 265
+State 269
 
    21 import_statement: IMPORT FROM import_file_type FILE file_path INTO table_name .
 
     $default  reduce using rule 21 (import_statement)
 
 
-State 266
+State 270
 
-  179 ident_commalist: ident_commalist ',' IDENTIFIER .
+  181 ident_commalist: ident_commalist ',' IDENTIFIER .
 
-    $default  reduce using rule 179 (ident_commalist)
+    $default  reduce using rule 181 (ident_commalist)
 
 
-State 267
+State 271
 
    44 insert_statement: INSERT INTO table_name opt_column_list VALUES '(' literal_list . ')'
    92 literal_list: literal_list . ',' literal
 
-    ')'  shift, and go to state 294
-    ','  shift, and go to state 146
+    ')'  shift, and go to state 299
+    ','  shift, and go to state 148
 
 
-State 268
+State 272
 
    90 expr_list: expr_list . ',' expr_alias
-  135 function_expr: IDENTIFIER '(' opt_distinct expr_list . ')'
+  137 function_expr: IDENTIFIER '(' opt_distinct expr_list . ')'
 
-    ')'  shift, and go to state 295
-    ','  shift, and go to state 171
-
-
-State 269
-
-  127 exists_expr: EXISTS '(' select_no_paren ')' .
-
-    $default  reduce using rule 127 (exists_expr)
+    ')'  shift, and go to state 300
+    ','  shift, and go to state 174
 
 
-State 270
+State 273
 
-  126 case_expr: CASE WHEN expr THEN . operand ELSE operand END
+  129 exists_expr: EXISTS '(' select_no_paren ')' .
+
+    $default  reduce using rule 129 (exists_expr)
+
+
+State 274
+
+  128 case_expr: CASE WHEN expr THEN . operand ELSE operand END
 
     IDENTIFIER  shift, and go to state 111
     STRING      shift, and go to state 92
     FLOATVAL    shift, and go to state 93
     INTVAL      shift, and go to state 75
-    NOT         shift, and go to state 164
-    '-'         shift, and go to state 115
-    '*'         shift, and go to state 116
-    '('         shift, and go to state 117
+    NOT         shift, and go to state 166
+    '-'         shift, and go to state 116
+    '*'         shift, and go to state 117
+    '('         shift, and go to state 118
     '?'         shift, and go to state 94
 
-    operand           go to state 296
-    scalar_expr       go to state 123
-    unary_expr        go to state 124
-    binary_expr       go to state 125
-    comp_expr         go to state 130
-    function_expr     go to state 131
-    column_name       go to state 133
-    literal           go to state 134
+    operand           go to state 301
+    scalar_expr       go to state 124
+    unary_expr        go to state 125
+    binary_expr       go to state 126
+    comp_expr         go to state 132
+    function_expr     go to state 133
+    column_name       go to state 135
+    literal           go to state 136
     string_literal    go to state 97
     num_literal       go to state 98
     int_literal       go to state 99
-    star_expr         go to state 135
+    star_expr         go to state 137
     placeholder_expr  go to state 100
-
-
-State 271
-
-  128 exists_expr: NOT EXISTS '(' select_no_paren . ')'
-
-    ')'  shift, and go to state 297
-
-
-State 272
-
-  151 table_ref_atomic: '(' select_statement . ')' opt_alias
-  173 join_table: '(' select_statement . ')' alias
-
-    ')'  shift, and go to state 298
-
-
-State 273
-
-  149 table_ref: table_ref_atomic ',' . table_ref_commalist
-
-    IDENTIFIER  shift, and go to state 35
-    '('         shift, and go to state 223
-
-    table_ref_atomic     go to state 299
-    table_ref_commalist  go to state 300
-    table_ref_name       go to state 226
-    table_name           go to state 227
-    join_clause          go to state 228
-    join_table           go to state 229
-
-
-State 274
-
-  155 table_ref_name: table_name opt_alias .
-
-    $default  reduce using rule 155 (table_ref_name)
 
 
 State 275
 
-  171 opt_join_type: NATURAL .
+  130 exists_expr: NOT EXISTS '(' select_no_paren . ')'
 
-    $default  reduce using rule 171 (opt_join_type)
+    ')'  shift, and go to state 302
 
 
 State 276
 
-  170 opt_join_type: CROSS .
+  127 sum_expr: SUM '(' expr ')' .
 
-    $default  reduce using rule 170 (opt_join_type)
+    $default  reduce using rule 127 (sum_expr)
 
 
 State 277
 
-  164 opt_join_type: INNER .
+  153 table_ref_atomic: '(' select_statement . ')' opt_alias
+  175 join_table: '(' select_statement . ')' alias
 
-    $default  reduce using rule 164 (opt_join_type)
+    ')'  shift, and go to state 303
 
 
 State 278
 
-  165 opt_join_type: OUTER .
+  151 table_ref: table_ref_atomic ',' . table_ref_commalist
 
-    $default  reduce using rule 165 (opt_join_type)
+    IDENTIFIER  shift, and go to state 35
+    '('         shift, and go to state 227
+
+    table_ref_atomic     go to state 304
+    table_ref_commalist  go to state 305
+    table_ref_name       go to state 230
+    table_name           go to state 231
+    join_clause          go to state 232
+    join_table           go to state 233
 
 
 State 279
 
-  167 opt_join_type: RIGHT . OUTER
-  169              | RIGHT .
+  157 table_ref_name: table_name opt_alias .
 
-    OUTER  shift, and go to state 301
-
-    $default  reduce using rule 169 (opt_join_type)
+    $default  reduce using rule 157 (table_ref_name)
 
 
 State 280
 
-  166 opt_join_type: LEFT . OUTER
-  168              | LEFT .
+  173 opt_join_type: NATURAL .
 
-    OUTER  shift, and go to state 302
-
-    $default  reduce using rule 168 (opt_join_type)
+    $default  reduce using rule 173 (opt_join_type)
 
 
 State 281
 
-  163 join_clause: join_table opt_join_type . JOIN join_table ON join_condition
+  172 opt_join_type: CROSS .
 
-    JOIN  shift, and go to state 303
+    $default  reduce using rule 172 (opt_join_type)
 
 
 State 282
 
-   69 opt_group: GROUP . BY expr_list opt_having
+  166 opt_join_type: INNER .
 
-    BY  shift, and go to state 304
+    $default  reduce using rule 166 (opt_join_type)
 
 
 State 283
+
+  167 opt_join_type: OUTER .
+
+    $default  reduce using rule 167 (opt_join_type)
+
+
+State 284
+
+  169 opt_join_type: RIGHT . OUTER
+  171              | RIGHT .
+
+    OUTER  shift, and go to state 306
+
+    $default  reduce using rule 171 (opt_join_type)
+
+
+State 285
+
+  168 opt_join_type: LEFT . OUTER
+  170              | LEFT .
+
+    OUTER  shift, and go to state 307
+
+    $default  reduce using rule 170 (opt_join_type)
+
+
+State 286
+
+  165 join_clause: join_table opt_join_type . JOIN join_table ON join_condition
+
+    JOIN  shift, and go to state 308
+
+
+State 287
+
+   69 opt_group: GROUP . BY expr_list opt_having
+
+    BY  shift, and go to state 309
+
+
+State 288
 
    62 select_clause: SELECT opt_top opt_distinct select_list from_clause opt_where opt_group .
 
     $default  reduce using rule 62 (select_clause)
 
 
-State 284
+State 289
 
-  136 between_expr: operand BETWEEN operand AND . operand
+  138 between_expr: operand BETWEEN operand AND . operand
 
     IDENTIFIER  shift, and go to state 111
     STRING      shift, and go to state 92
     FLOATVAL    shift, and go to state 93
     INTVAL      shift, and go to state 75
-    NOT         shift, and go to state 164
-    '-'         shift, and go to state 115
-    '*'         shift, and go to state 116
-    '('         shift, and go to state 117
+    NOT         shift, and go to state 166
+    '-'         shift, and go to state 116
+    '*'         shift, and go to state 117
+    '('         shift, and go to state 118
     '?'         shift, and go to state 94
 
-    operand           go to state 305
-    scalar_expr       go to state 123
-    unary_expr        go to state 124
-    binary_expr       go to state 125
-    comp_expr         go to state 130
-    function_expr     go to state 131
-    column_name       go to state 133
-    literal           go to state 134
+    operand           go to state 310
+    scalar_expr       go to state 124
+    unary_expr        go to state 125
+    binary_expr       go to state 126
+    comp_expr         go to state 132
+    function_expr     go to state 133
+    column_name       go to state 135
+    literal           go to state 136
     string_literal    go to state 97
     num_literal       go to state 98
     int_literal       go to state 99
-    star_expr         go to state 135
+    star_expr         go to state 137
     placeholder_expr  go to state 100
 
 
-State 285
+State 290
 
-  112 binary_expr: operand . '-' operand
-  113            | operand . '+' operand
-  114            | operand . '/' operand
-  115            | operand . '*' operand
-  116            | operand . '%' operand
-  117            | operand . '^' operand
-  118            | operand . LIKE operand
-  119            | operand . NOT LIKE operand
-  119            | operand NOT LIKE operand .
-  129 comp_expr: operand . '=' operand
-  130          | operand . NOTEQUALS operand
-  131          | operand . '<' operand
-  132          | operand . '>' operand
-  133          | operand . LESSEQ operand
-  134          | operand . GREATEREQ operand
+  113 binary_expr: operand . '-' operand
+  114            | operand . '+' operand
+  115            | operand . '/' operand
+  116            | operand . '*' operand
+  117            | operand . '%' operand
+  118            | operand . '^' operand
+  119            | operand . LIKE operand
+  120            | operand . NOT LIKE operand
+  120            | operand NOT LIKE operand .
+  131 comp_expr: operand . '=' operand
+  132          | operand . NOTEQUALS operand
+  133          | operand . '<' operand
+  134          | operand . '>' operand
+  135          | operand . LESSEQ operand
+  136          | operand . GREATEREQ operand
 
-    NOTEQUALS  shift, and go to state 178
-    LESSEQ     shift, and go to state 179
-    GREATEREQ  shift, and go to state 180
-    LIKE       shift, and go to state 182
-    '='        shift, and go to state 185
-    '<'        shift, and go to state 186
-    '>'        shift, and go to state 187
-    '+'        shift, and go to state 188
-    '-'        shift, and go to state 189
-    '*'        shift, and go to state 190
-    '/'        shift, and go to state 191
-    '%'        shift, and go to state 192
-    '^'        shift, and go to state 193
+    NOTEQUALS  shift, and go to state 181
+    LESSEQ     shift, and go to state 182
+    GREATEREQ  shift, and go to state 183
+    LIKE       shift, and go to state 185
+    '='        shift, and go to state 188
+    '<'        shift, and go to state 189
+    '>'        shift, and go to state 190
+    '+'        shift, and go to state 191
+    '-'        shift, and go to state 192
+    '*'        shift, and go to state 193
+    '/'        shift, and go to state 194
+    '%'        shift, and go to state 195
+    '^'        shift, and go to state 196
 
-    $default  reduce using rule 119 (binary_expr)
+    $default  reduce using rule 120 (binary_expr)
 
 
-State 286
+State 291
 
-  123 in_expr: operand NOT IN '(' . expr_list ')'
-  125        | operand NOT IN '(' . select_no_paren ')'
+  124 in_expr: operand NOT IN '(' . expr_list ')'
+  126        | operand NOT IN '(' . select_no_paren ')'
 
     IDENTIFIER  shift, and go to state 111
     STRING      shift, and go to state 92
@@ -4373,201 +4472,203 @@ State 286
     SELECT      shift, and go to state 9
     CASE        shift, and go to state 113
     NOT         shift, and go to state 114
-    '-'         shift, and go to state 115
-    '*'         shift, and go to state 116
-    '('         shift, and go to state 117
+    SUM         shift, and go to state 115
+    '-'         shift, and go to state 116
+    '*'         shift, and go to state 117
+    '('         shift, and go to state 118
     '?'         shift, and go to state 94
 
-    select_no_paren   go to state 306
+    select_no_paren   go to state 311
     select_clause     go to state 31
-    expr_list         go to state 307
-    expr_alias        go to state 120
-    expr              go to state 121
-    operand           go to state 122
-    scalar_expr       go to state 123
-    unary_expr        go to state 124
-    binary_expr       go to state 125
-    logic_expr        go to state 126
-    in_expr           go to state 127
-    case_expr         go to state 128
-    exists_expr       go to state 129
-    comp_expr         go to state 130
-    function_expr     go to state 131
-    between_expr      go to state 132
-    column_name       go to state 133
-    literal           go to state 134
+    expr_list         go to state 312
+    expr_alias        go to state 121
+    expr              go to state 122
+    operand           go to state 123
+    scalar_expr       go to state 124
+    unary_expr        go to state 125
+    binary_expr       go to state 126
+    logic_expr        go to state 127
+    in_expr           go to state 128
+    sum_expr          go to state 129
+    case_expr         go to state 130
+    exists_expr       go to state 131
+    comp_expr         go to state 132
+    function_expr     go to state 133
+    between_expr      go to state 134
+    column_name       go to state 135
+    literal           go to state 136
     string_literal    go to state 97
     num_literal       go to state 98
     int_literal       go to state 99
-    star_expr         go to state 135
+    star_expr         go to state 137
     placeholder_expr  go to state 100
 
 
-State 287
+State 292
 
-  124 in_expr: operand IN '(' select_no_paren . ')'
+  125 in_expr: operand IN '(' select_no_paren . ')'
 
-    ')'  shift, and go to state 308
+    ')'  shift, and go to state 313
 
 
-State 288
+State 293
 
    90 expr_list: expr_list . ',' expr_alias
-  122 in_expr: operand IN '(' expr_list . ')'
+  123 in_expr: operand IN '(' expr_list . ')'
 
-    ')'  shift, and go to state 309
-    ','  shift, and go to state 171
+    ')'  shift, and go to state 314
+    ','  shift, and go to state 174
 
 
-State 289
+State 294
 
    24 create_statement: CREATE TABLE opt_not_exists table_name FROM TBL FILE file_path .
 
     $default  reduce using rule 24 (create_statement)
 
 
-State 290
+State 295
 
    34 column_def: IDENTIFIER column_type '(' . INTVAL ')'
 
-    INTVAL  shift, and go to state 310
+    INTVAL  shift, and go to state 315
 
 
-State 291
+State 296
 
    29 opt_primary_key: ',' PRIMARY . KEY '(' IDENTIFIER ')'
 
-    KEY  shift, and go to state 311
+    KEY  shift, and go to state 316
 
 
-State 292
+State 297
 
    32 column_def_commalist: column_def_commalist ',' column_def .
 
     $default  reduce using rule 32 (column_def_commalist)
 
 
-State 293
+State 298
 
    25 create_statement: CREATE TABLE opt_not_exists table_name '(' column_def_commalist opt_primary_key ')' .
 
     $default  reduce using rule 25 (create_statement)
 
 
-State 294
+State 299
 
    44 insert_statement: INSERT INTO table_name opt_column_list VALUES '(' literal_list ')' .
 
     $default  reduce using rule 44 (insert_statement)
 
 
-State 295
-
-  135 function_expr: IDENTIFIER '(' opt_distinct expr_list ')' .
-
-    $default  reduce using rule 135 (function_expr)
-
-
-State 296
-
-  112 binary_expr: operand . '-' operand
-  113            | operand . '+' operand
-  114            | operand . '/' operand
-  115            | operand . '*' operand
-  116            | operand . '%' operand
-  117            | operand . '^' operand
-  118            | operand . LIKE operand
-  119            | operand . NOT LIKE operand
-  126 case_expr: CASE WHEN expr THEN operand . ELSE operand END
-  129 comp_expr: operand . '=' operand
-  130          | operand . NOTEQUALS operand
-  131          | operand . '<' operand
-  132          | operand . '>' operand
-  133          | operand . LESSEQ operand
-  134          | operand . GREATEREQ operand
-
-    NOTEQUALS  shift, and go to state 178
-    LESSEQ     shift, and go to state 179
-    GREATEREQ  shift, and go to state 180
-    ELSE       shift, and go to state 312
-    LIKE       shift, and go to state 182
-    NOT        shift, and go to state 220
-    '='        shift, and go to state 185
-    '<'        shift, and go to state 186
-    '>'        shift, and go to state 187
-    '+'        shift, and go to state 188
-    '-'        shift, and go to state 189
-    '*'        shift, and go to state 190
-    '/'        shift, and go to state 191
-    '%'        shift, and go to state 192
-    '^'        shift, and go to state 193
-
-
-State 297
-
-  128 exists_expr: NOT EXISTS '(' select_no_paren ')' .
-
-    $default  reduce using rule 128 (exists_expr)
-
-
-State 298
-
-  151 table_ref_atomic: '(' select_statement ')' . opt_alias
-  173 join_table: '(' select_statement ')' . alias
-
-    IDENTIFIER  shift, and go to state 172
-    AS          shift, and go to state 174
-
-    $default  reduce using rule 162 (opt_alias)
-
-    alias      go to state 313
-    opt_alias  go to state 314
-
-
-State 299
-
-  153 table_ref_commalist: table_ref_atomic .
-
-    $default  reduce using rule 153 (table_ref_commalist)
-
-
 State 300
 
-  149 table_ref: table_ref_atomic ',' table_ref_commalist .
-  154 table_ref_commalist: table_ref_commalist . ',' table_ref_atomic
+  137 function_expr: IDENTIFIER '(' opt_distinct expr_list ')' .
 
-    ','  shift, and go to state 315
-
-    $default  reduce using rule 149 (table_ref)
+    $default  reduce using rule 137 (function_expr)
 
 
 State 301
 
-  167 opt_join_type: RIGHT OUTER .
+  113 binary_expr: operand . '-' operand
+  114            | operand . '+' operand
+  115            | operand . '/' operand
+  116            | operand . '*' operand
+  117            | operand . '%' operand
+  118            | operand . '^' operand
+  119            | operand . LIKE operand
+  120            | operand . NOT LIKE operand
+  128 case_expr: CASE WHEN expr THEN operand . ELSE operand END
+  131 comp_expr: operand . '=' operand
+  132          | operand . NOTEQUALS operand
+  133          | operand . '<' operand
+  134          | operand . '>' operand
+  135          | operand . LESSEQ operand
+  136          | operand . GREATEREQ operand
 
-    $default  reduce using rule 167 (opt_join_type)
+    NOTEQUALS  shift, and go to state 181
+    LESSEQ     shift, and go to state 182
+    GREATEREQ  shift, and go to state 183
+    ELSE       shift, and go to state 317
+    LIKE       shift, and go to state 185
+    NOT        shift, and go to state 223
+    '='        shift, and go to state 188
+    '<'        shift, and go to state 189
+    '>'        shift, and go to state 190
+    '+'        shift, and go to state 191
+    '-'        shift, and go to state 192
+    '*'        shift, and go to state 193
+    '/'        shift, and go to state 194
+    '%'        shift, and go to state 195
+    '^'        shift, and go to state 196
 
 
 State 302
 
-  166 opt_join_type: LEFT OUTER .
+  130 exists_expr: NOT EXISTS '(' select_no_paren ')' .
 
-    $default  reduce using rule 166 (opt_join_type)
+    $default  reduce using rule 130 (exists_expr)
 
 
 State 303
 
-  163 join_clause: join_table opt_join_type JOIN . join_table ON join_condition
+  153 table_ref_atomic: '(' select_statement ')' . opt_alias
+  175 join_table: '(' select_statement ')' . alias
 
-    IDENTIFIER  shift, and go to state 35
-    '('         shift, and go to state 316
+    IDENTIFIER  shift, and go to state 175
+    AS          shift, and go to state 177
 
-    table_ref_name  go to state 317
-    table_name      go to state 227
-    join_table      go to state 318
+    $default  reduce using rule 164 (opt_alias)
+
+    alias      go to state 318
+    opt_alias  go to state 319
 
 
 State 304
+
+  155 table_ref_commalist: table_ref_atomic .
+
+    $default  reduce using rule 155 (table_ref_commalist)
+
+
+State 305
+
+  151 table_ref: table_ref_atomic ',' table_ref_commalist .
+  156 table_ref_commalist: table_ref_commalist . ',' table_ref_atomic
+
+    ','  shift, and go to state 320
+
+    $default  reduce using rule 151 (table_ref)
+
+
+State 306
+
+  169 opt_join_type: RIGHT OUTER .
+
+    $default  reduce using rule 169 (opt_join_type)
+
+
+State 307
+
+  168 opt_join_type: LEFT OUTER .
+
+    $default  reduce using rule 168 (opt_join_type)
+
+
+State 308
+
+  165 join_clause: join_table opt_join_type JOIN . join_table ON join_condition
+
+    IDENTIFIER  shift, and go to state 35
+    '('         shift, and go to state 321
+
+    table_ref_name  go to state 322
+    table_name      go to state 231
+    join_table      go to state 323
+
+
+State 309
 
    69 opt_group: GROUP BY . expr_list opt_having
 
@@ -4578,299 +4679,301 @@ State 304
     EXISTS      shift, and go to state 112
     CASE        shift, and go to state 113
     NOT         shift, and go to state 114
-    '-'         shift, and go to state 115
-    '*'         shift, and go to state 116
-    '('         shift, and go to state 117
+    SUM         shift, and go to state 115
+    '-'         shift, and go to state 116
+    '*'         shift, and go to state 117
+    '('         shift, and go to state 118
     '?'         shift, and go to state 94
 
-    expr_list         go to state 319
-    expr_alias        go to state 120
-    expr              go to state 121
-    operand           go to state 122
-    scalar_expr       go to state 123
-    unary_expr        go to state 124
-    binary_expr       go to state 125
-    logic_expr        go to state 126
-    in_expr           go to state 127
-    case_expr         go to state 128
-    exists_expr       go to state 129
-    comp_expr         go to state 130
-    function_expr     go to state 131
-    between_expr      go to state 132
-    column_name       go to state 133
-    literal           go to state 134
+    expr_list         go to state 324
+    expr_alias        go to state 121
+    expr              go to state 122
+    operand           go to state 123
+    scalar_expr       go to state 124
+    unary_expr        go to state 125
+    binary_expr       go to state 126
+    logic_expr        go to state 127
+    in_expr           go to state 128
+    sum_expr          go to state 129
+    case_expr         go to state 130
+    exists_expr       go to state 131
+    comp_expr         go to state 132
+    function_expr     go to state 133
+    between_expr      go to state 134
+    column_name       go to state 135
+    literal           go to state 136
     string_literal    go to state 97
     num_literal       go to state 98
     int_literal       go to state 99
-    star_expr         go to state 135
+    star_expr         go to state 137
     placeholder_expr  go to state 100
-
-
-State 305
-
-  112 binary_expr: operand . '-' operand
-  113            | operand . '+' operand
-  114            | operand . '/' operand
-  115            | operand . '*' operand
-  116            | operand . '%' operand
-  117            | operand . '^' operand
-  118            | operand . LIKE operand
-  119            | operand . NOT LIKE operand
-  129 comp_expr: operand . '=' operand
-  130          | operand . NOTEQUALS operand
-  131          | operand . '<' operand
-  132          | operand . '>' operand
-  133          | operand . LESSEQ operand
-  134          | operand . GREATEREQ operand
-  136 between_expr: operand BETWEEN operand AND operand .
-
-    NOTEQUALS  shift, and go to state 178
-    LESSEQ     shift, and go to state 179
-    GREATEREQ  shift, and go to state 180
-    LIKE       shift, and go to state 182
-    NOT        shift, and go to state 220
-    '='        shift, and go to state 185
-    '<'        shift, and go to state 186
-    '>'        shift, and go to state 187
-    '+'        shift, and go to state 188
-    '-'        shift, and go to state 189
-    '*'        shift, and go to state 190
-    '/'        shift, and go to state 191
-    '%'        shift, and go to state 192
-    '^'        shift, and go to state 193
-
-    $default  reduce using rule 136 (between_expr)
-
-
-State 306
-
-  125 in_expr: operand NOT IN '(' select_no_paren . ')'
-
-    ')'  shift, and go to state 320
-
-
-State 307
-
-   90 expr_list: expr_list . ',' expr_alias
-  123 in_expr: operand NOT IN '(' expr_list . ')'
-
-    ')'  shift, and go to state 321
-    ','  shift, and go to state 171
-
-
-State 308
-
-  124 in_expr: operand IN '(' select_no_paren ')' .
-
-    $default  reduce using rule 124 (in_expr)
-
-
-State 309
-
-  122 in_expr: operand IN '(' expr_list ')' .
-
-    $default  reduce using rule 122 (in_expr)
 
 
 State 310
 
-   34 column_def: IDENTIFIER column_type '(' INTVAL . ')'
+  113 binary_expr: operand . '-' operand
+  114            | operand . '+' operand
+  115            | operand . '/' operand
+  116            | operand . '*' operand
+  117            | operand . '%' operand
+  118            | operand . '^' operand
+  119            | operand . LIKE operand
+  120            | operand . NOT LIKE operand
+  131 comp_expr: operand . '=' operand
+  132          | operand . NOTEQUALS operand
+  133          | operand . '<' operand
+  134          | operand . '>' operand
+  135          | operand . LESSEQ operand
+  136          | operand . GREATEREQ operand
+  138 between_expr: operand BETWEEN operand AND operand .
 
-    ')'  shift, and go to state 322
+    NOTEQUALS  shift, and go to state 181
+    LESSEQ     shift, and go to state 182
+    GREATEREQ  shift, and go to state 183
+    LIKE       shift, and go to state 185
+    NOT        shift, and go to state 223
+    '='        shift, and go to state 188
+    '<'        shift, and go to state 189
+    '>'        shift, and go to state 190
+    '+'        shift, and go to state 191
+    '-'        shift, and go to state 192
+    '*'        shift, and go to state 193
+    '/'        shift, and go to state 194
+    '%'        shift, and go to state 195
+    '^'        shift, and go to state 196
+
+    $default  reduce using rule 138 (between_expr)
 
 
 State 311
 
-   29 opt_primary_key: ',' PRIMARY KEY . '(' IDENTIFIER ')'
+  126 in_expr: operand NOT IN '(' select_no_paren . ')'
 
-    '('  shift, and go to state 323
+    ')'  shift, and go to state 325
 
 
 State 312
 
-  126 case_expr: CASE WHEN expr THEN operand ELSE . operand END
+   90 expr_list: expr_list . ',' expr_alias
+  124 in_expr: operand NOT IN '(' expr_list . ')'
+
+    ')'  shift, and go to state 326
+    ','  shift, and go to state 174
+
+
+State 313
+
+  125 in_expr: operand IN '(' select_no_paren ')' .
+
+    $default  reduce using rule 125 (in_expr)
+
+
+State 314
+
+  123 in_expr: operand IN '(' expr_list ')' .
+
+    $default  reduce using rule 123 (in_expr)
+
+
+State 315
+
+   34 column_def: IDENTIFIER column_type '(' INTVAL . ')'
+
+    ')'  shift, and go to state 327
+
+
+State 316
+
+   29 opt_primary_key: ',' PRIMARY KEY . '(' IDENTIFIER ')'
+
+    '('  shift, and go to state 328
+
+
+State 317
+
+  128 case_expr: CASE WHEN expr THEN operand ELSE . operand END
 
     IDENTIFIER  shift, and go to state 111
     STRING      shift, and go to state 92
     FLOATVAL    shift, and go to state 93
     INTVAL      shift, and go to state 75
-    NOT         shift, and go to state 164
-    '-'         shift, and go to state 115
-    '*'         shift, and go to state 116
-    '('         shift, and go to state 117
+    NOT         shift, and go to state 166
+    '-'         shift, and go to state 116
+    '*'         shift, and go to state 117
+    '('         shift, and go to state 118
     '?'         shift, and go to state 94
 
-    operand           go to state 324
-    scalar_expr       go to state 123
-    unary_expr        go to state 124
-    binary_expr       go to state 125
-    comp_expr         go to state 130
-    function_expr     go to state 131
-    column_name       go to state 133
-    literal           go to state 134
+    operand           go to state 329
+    scalar_expr       go to state 124
+    unary_expr        go to state 125
+    binary_expr       go to state 126
+    comp_expr         go to state 132
+    function_expr     go to state 133
+    column_name       go to state 135
+    literal           go to state 136
     string_literal    go to state 97
     num_literal       go to state 98
     int_literal       go to state 99
-    star_expr         go to state 135
+    star_expr         go to state 137
     placeholder_expr  go to state 100
 
 
-State 313
+State 318
 
-  161 opt_alias: alias .
-  173 join_table: '(' select_statement ')' alias .
+  163 opt_alias: alias .
+  175 join_table: '(' select_statement ')' alias .
 
-    NATURAL   reduce using rule 173 (join_table)
-    CROSS     reduce using rule 173 (join_table)
-    INNER     reduce using rule 173 (join_table)
-    OUTER     reduce using rule 173 (join_table)
-    RIGHT     reduce using rule 173 (join_table)
-    JOIN      reduce using rule 173 (join_table)
-    LEFT      reduce using rule 173 (join_table)
-    $default  reduce using rule 161 (opt_alias)
-
-
-State 314
-
-  151 table_ref_atomic: '(' select_statement ')' opt_alias .
-
-    $default  reduce using rule 151 (table_ref_atomic)
+    NATURAL   reduce using rule 175 (join_table)
+    CROSS     reduce using rule 175 (join_table)
+    INNER     reduce using rule 175 (join_table)
+    OUTER     reduce using rule 175 (join_table)
+    RIGHT     reduce using rule 175 (join_table)
+    JOIN      reduce using rule 175 (join_table)
+    LEFT      reduce using rule 175 (join_table)
+    $default  reduce using rule 163 (opt_alias)
 
 
-State 315
+State 319
 
-  154 table_ref_commalist: table_ref_commalist ',' . table_ref_atomic
+  153 table_ref_atomic: '(' select_statement ')' opt_alias .
+
+    $default  reduce using rule 153 (table_ref_atomic)
+
+
+State 320
+
+  156 table_ref_commalist: table_ref_commalist ',' . table_ref_atomic
 
     IDENTIFIER  shift, and go to state 35
-    '('         shift, and go to state 223
+    '('         shift, and go to state 227
 
-    table_ref_atomic  go to state 325
-    table_ref_name    go to state 226
-    table_name        go to state 227
-    join_clause       go to state 228
-    join_table        go to state 229
+    table_ref_atomic  go to state 330
+    table_ref_name    go to state 230
+    table_name        go to state 231
+    join_clause       go to state 232
+    join_table        go to state 233
 
 
-State 316
+State 321
 
-  173 join_table: '(' . select_statement ')' alias
+  175 join_table: '(' . select_statement ')' alias
 
     SELECT  shift, and go to state 9
     '('     shift, and go to state 14
 
-    select_statement   go to state 326
+    select_statement   go to state 331
     select_with_paren  go to state 29
     select_no_paren    go to state 30
     select_clause      go to state 31
 
 
-State 317
+State 322
 
-  174 join_table: table_ref_name .
+  176 join_table: table_ref_name .
 
-    $default  reduce using rule 174 (join_table)
-
-
-State 318
-
-  163 join_clause: join_table opt_join_type JOIN join_table . ON join_condition
-
-    ON  shift, and go to state 327
+    $default  reduce using rule 176 (join_table)
 
 
-State 319
+State 323
+
+  165 join_clause: join_table opt_join_type JOIN join_table . ON join_condition
+
+    ON  shift, and go to state 332
+
+
+State 324
 
    69 opt_group: GROUP BY expr_list . opt_having
    90 expr_list: expr_list . ',' expr_alias
 
-    HAVING  shift, and go to state 328
-    ','     shift, and go to state 171
+    HAVING  shift, and go to state 333
+    ','     shift, and go to state 174
 
     $default  reduce using rule 72 (opt_having)
 
-    opt_having  go to state 329
+    opt_having  go to state 334
 
 
-State 320
+State 325
 
-  125 in_expr: operand NOT IN '(' select_no_paren ')' .
+  126 in_expr: operand NOT IN '(' select_no_paren ')' .
 
-    $default  reduce using rule 125 (in_expr)
-
-
-State 321
-
-  123 in_expr: operand NOT IN '(' expr_list ')' .
-
-    $default  reduce using rule 123 (in_expr)
+    $default  reduce using rule 126 (in_expr)
 
 
-State 322
+State 326
+
+  124 in_expr: operand NOT IN '(' expr_list ')' .
+
+    $default  reduce using rule 124 (in_expr)
+
+
+State 327
 
    34 column_def: IDENTIFIER column_type '(' INTVAL ')' .
 
     $default  reduce using rule 34 (column_def)
 
 
-State 323
+State 328
 
    29 opt_primary_key: ',' PRIMARY KEY '(' . IDENTIFIER ')'
 
-    IDENTIFIER  shift, and go to state 330
+    IDENTIFIER  shift, and go to state 335
 
 
-State 324
+State 329
 
-  112 binary_expr: operand . '-' operand
-  113            | operand . '+' operand
-  114            | operand . '/' operand
-  115            | operand . '*' operand
-  116            | operand . '%' operand
-  117            | operand . '^' operand
-  118            | operand . LIKE operand
-  119            | operand . NOT LIKE operand
-  126 case_expr: CASE WHEN expr THEN operand ELSE operand . END
-  129 comp_expr: operand . '=' operand
-  130          | operand . NOTEQUALS operand
-  131          | operand . '<' operand
-  132          | operand . '>' operand
-  133          | operand . LESSEQ operand
-  134          | operand . GREATEREQ operand
+  113 binary_expr: operand . '-' operand
+  114            | operand . '+' operand
+  115            | operand . '/' operand
+  116            | operand . '*' operand
+  117            | operand . '%' operand
+  118            | operand . '^' operand
+  119            | operand . LIKE operand
+  120            | operand . NOT LIKE operand
+  128 case_expr: CASE WHEN expr THEN operand ELSE operand . END
+  131 comp_expr: operand . '=' operand
+  132          | operand . NOTEQUALS operand
+  133          | operand . '<' operand
+  134          | operand . '>' operand
+  135          | operand . LESSEQ operand
+  136          | operand . GREATEREQ operand
 
-    NOTEQUALS  shift, and go to state 178
-    LESSEQ     shift, and go to state 179
-    GREATEREQ  shift, and go to state 180
-    LIKE       shift, and go to state 182
-    END        shift, and go to state 331
-    NOT        shift, and go to state 220
-    '='        shift, and go to state 185
-    '<'        shift, and go to state 186
-    '>'        shift, and go to state 187
-    '+'        shift, and go to state 188
-    '-'        shift, and go to state 189
-    '*'        shift, and go to state 190
-    '/'        shift, and go to state 191
-    '%'        shift, and go to state 192
-    '^'        shift, and go to state 193
-
-
-State 325
-
-  154 table_ref_commalist: table_ref_commalist ',' table_ref_atomic .
-
-    $default  reduce using rule 154 (table_ref_commalist)
+    NOTEQUALS  shift, and go to state 181
+    LESSEQ     shift, and go to state 182
+    GREATEREQ  shift, and go to state 183
+    LIKE       shift, and go to state 185
+    END        shift, and go to state 336
+    NOT        shift, and go to state 223
+    '='        shift, and go to state 188
+    '<'        shift, and go to state 189
+    '>'        shift, and go to state 190
+    '+'        shift, and go to state 191
+    '-'        shift, and go to state 192
+    '*'        shift, and go to state 193
+    '/'        shift, and go to state 194
+    '%'        shift, and go to state 195
+    '^'        shift, and go to state 196
 
 
-State 326
+State 330
 
-  173 join_table: '(' select_statement . ')' alias
+  156 table_ref_commalist: table_ref_commalist ',' table_ref_atomic .
 
-    ')'  shift, and go to state 332
+    $default  reduce using rule 156 (table_ref_commalist)
 
 
-State 327
+State 331
 
-  163 join_clause: join_table opt_join_type JOIN join_table ON . join_condition
+  175 join_table: '(' select_statement . ')' alias
+
+    ')'  shift, and go to state 337
+
+
+State 332
+
+  165 join_clause: join_table opt_join_type JOIN join_table ON . join_condition
 
     IDENTIFIER  shift, and go to state 111
     STRING      shift, and go to state 92
@@ -4879,34 +4982,36 @@ State 327
     EXISTS      shift, and go to state 112
     CASE        shift, and go to state 113
     NOT         shift, and go to state 114
-    '-'         shift, and go to state 115
-    '*'         shift, and go to state 116
-    '('         shift, and go to state 117
+    SUM         shift, and go to state 115
+    '-'         shift, and go to state 116
+    '*'         shift, and go to state 117
+    '('         shift, and go to state 118
     '?'         shift, and go to state 94
 
-    expr              go to state 333
-    operand           go to state 122
-    scalar_expr       go to state 123
-    unary_expr        go to state 124
-    binary_expr       go to state 125
-    logic_expr        go to state 126
-    in_expr           go to state 127
-    case_expr         go to state 128
-    exists_expr       go to state 129
-    comp_expr         go to state 130
-    function_expr     go to state 131
-    between_expr      go to state 132
-    column_name       go to state 133
-    literal           go to state 134
+    expr              go to state 338
+    operand           go to state 123
+    scalar_expr       go to state 124
+    unary_expr        go to state 125
+    binary_expr       go to state 126
+    logic_expr        go to state 127
+    in_expr           go to state 128
+    sum_expr          go to state 129
+    case_expr         go to state 130
+    exists_expr       go to state 131
+    comp_expr         go to state 132
+    function_expr     go to state 133
+    between_expr      go to state 134
+    column_name       go to state 135
+    literal           go to state 136
     string_literal    go to state 97
     num_literal       go to state 98
     int_literal       go to state 99
-    star_expr         go to state 135
+    star_expr         go to state 137
     placeholder_expr  go to state 100
-    join_condition    go to state 334
+    join_condition    go to state 339
 
 
-State 328
+State 333
 
    71 opt_having: HAVING . expr
 
@@ -4917,103 +5022,105 @@ State 328
     EXISTS      shift, and go to state 112
     CASE        shift, and go to state 113
     NOT         shift, and go to state 114
-    '-'         shift, and go to state 115
-    '*'         shift, and go to state 116
-    '('         shift, and go to state 117
+    SUM         shift, and go to state 115
+    '-'         shift, and go to state 116
+    '*'         shift, and go to state 117
+    '('         shift, and go to state 118
     '?'         shift, and go to state 94
 
-    expr              go to state 335
-    operand           go to state 122
-    scalar_expr       go to state 123
-    unary_expr        go to state 124
-    binary_expr       go to state 125
-    logic_expr        go to state 126
-    in_expr           go to state 127
-    case_expr         go to state 128
-    exists_expr       go to state 129
-    comp_expr         go to state 130
-    function_expr     go to state 131
-    between_expr      go to state 132
-    column_name       go to state 133
-    literal           go to state 134
+    expr              go to state 340
+    operand           go to state 123
+    scalar_expr       go to state 124
+    unary_expr        go to state 125
+    binary_expr       go to state 126
+    logic_expr        go to state 127
+    in_expr           go to state 128
+    sum_expr          go to state 129
+    case_expr         go to state 130
+    exists_expr       go to state 131
+    comp_expr         go to state 132
+    function_expr     go to state 133
+    between_expr      go to state 134
+    column_name       go to state 135
+    literal           go to state 136
     string_literal    go to state 97
     num_literal       go to state 98
     int_literal       go to state 99
-    star_expr         go to state 135
+    star_expr         go to state 137
     placeholder_expr  go to state 100
 
 
-State 329
+State 334
 
    69 opt_group: GROUP BY expr_list opt_having .
 
     $default  reduce using rule 69 (opt_group)
 
 
-State 330
+State 335
 
    29 opt_primary_key: ',' PRIMARY KEY '(' IDENTIFIER . ')'
 
-    ')'  shift, and go to state 336
+    ')'  shift, and go to state 341
 
 
-State 331
+State 336
 
-  126 case_expr: CASE WHEN expr THEN operand ELSE operand END .
+  128 case_expr: CASE WHEN expr THEN operand ELSE operand END .
 
-    $default  reduce using rule 126 (case_expr)
-
-
-State 332
-
-  173 join_table: '(' select_statement ')' . alias
-
-    IDENTIFIER  shift, and go to state 172
-    AS          shift, and go to state 174
-
-    alias  go to state 337
+    $default  reduce using rule 128 (case_expr)
 
 
-State 333
+State 337
 
-  120 logic_expr: expr . AND expr
-  121           | expr . OR expr
-  175 join_condition: expr .
+  175 join_table: '(' select_statement ')' . alias
 
-    AND  shift, and go to state 173
-    OR   shift, and go to state 175
+    IDENTIFIER  shift, and go to state 175
+    AS          shift, and go to state 177
 
-    $default  reduce using rule 175 (join_condition)
+    alias  go to state 342
 
 
-State 334
+State 338
 
-  163 join_clause: join_table opt_join_type JOIN join_table ON join_condition .
+  121 logic_expr: expr . AND expr
+  122           | expr . OR expr
+  177 join_condition: expr .
 
-    $default  reduce using rule 163 (join_clause)
+    AND  shift, and go to state 176
+    OR   shift, and go to state 178
+
+    $default  reduce using rule 177 (join_condition)
 
 
-State 335
+State 339
+
+  165 join_clause: join_table opt_join_type JOIN join_table ON join_condition .
+
+    $default  reduce using rule 165 (join_clause)
+
+
+State 340
 
    71 opt_having: HAVING expr .
-  120 logic_expr: expr . AND expr
-  121           | expr . OR expr
+  121 logic_expr: expr . AND expr
+  122           | expr . OR expr
 
-    AND  shift, and go to state 173
-    OR   shift, and go to state 175
+    AND  shift, and go to state 176
+    OR   shift, and go to state 178
 
     $default  reduce using rule 71 (opt_having)
 
 
-State 336
+State 341
 
    29 opt_primary_key: ',' PRIMARY KEY '(' IDENTIFIER ')' .
 
     $default  reduce using rule 29 (opt_primary_key)
 
 
-State 337
+State 342
 
-  173 join_table: '(' select_statement ')' alias .
+  175 join_table: '(' select_statement ')' alias .
 
-    $default  reduce using rule 173 (join_table)
+    $default  reduce using rule 175 (join_table)
