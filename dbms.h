@@ -6,6 +6,7 @@ using namespace std;
 namespace dbms {
 
 enum RUN_MODE{
+    SCRIPT = 0,
     INTERACTIVE = 1
 };
 

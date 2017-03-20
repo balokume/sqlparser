@@ -26,6 +26,7 @@ int main(int argc, char *argv[])
     std::string param = argv[1];
     DBMS db;
     if(param.find("script=") == 0){
+        db.setMode(RUN_MODE::SCRIPT);
 
         std::ifstream file(param.substr(7));
         std::stringstream buffer;

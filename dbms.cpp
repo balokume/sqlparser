@@ -12,6 +12,7 @@ DBMS::DBMS() : mode(RUN_MODE::INTERACTIVE)
 }
 
 DBMS::~DBMS(){
+    if(mode == RUN_MODE::SCRIPT){
         ((ofstream*)os)->close();
         delete os;
     }
@@ -20,6 +21,7 @@ DBMS::~DBMS(){
 void DBMS::setMode(RUN_MODE mode){
     this->mode = mode;
 
+    if(mode == RUN_MODE::SCRIPT){
         os = new ofstream("output.txt");
     }else{
         os = &std::cout;
