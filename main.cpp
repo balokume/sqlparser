@@ -35,13 +35,21 @@ int main(int argc, char *argv[])
     }else{
 
         string query = param;
+
+        db.setMode(RUN_MODE::INTERACTIVE);
+
         while(true){
-            db.setMode(RUN_MODE::INTERACTIVE);
             if(db.processQuery(query))
                 return 0;
 
             cout<<"SQL > ";
-            getline(cin, query);
+            query.clear();
+            do{
+                string line;
+                getline(cin, line);
+                query += " " + line;
+            }while (query.find(";") == string::npos);
+
         }
     }
 }
