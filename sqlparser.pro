@@ -11,6 +11,7 @@ SOURCES += main.cpp \
     sql/statements.cpp \
     parser/bison_parser.cpp \
     parser/flex_lexer.cpp \
+    dbms.cpp
 
 HEADERS += \
     sqlhelper.h \
@@ -34,6 +35,7 @@ HEADERS += \
     parser/bison_parser.h \
     parser/flex_lexer.h \
     parser/parser_typedef.h \
+    dbms.h
 
 DISTFILES += \
     parser/bison_parser.output

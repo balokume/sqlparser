@@ -8,44 +8,39 @@
 // contains printing utilities
 #include "sqlhelper.h"
 #include <cassert>
+#include <vector>
+#include <fstream>
+#include <sstream>
+#include "dbms.h"
+
 using namespace std;
+using namespace dbms;
 
 int main(int argc, char *argv[])
 {
-//    cout << "Hello World!" << endl;
-////#line 1 "src.txt"
-//#line 1 "testhead.h"
-////    assert(1+1==3);
-//    return 0;
-
     if (argc <= 1) {
-        fprintf(stderr, "Usage: ./example \"SELECT * FROM test;\"\n");
+        fprintf(stderr, "Usage:\n./dbms script=filename\n\tOR\n./dbms \"SQL query\"\n");
         return -1;
     }
-    std::string query = argv[1];
 
-    // parse a given query
-    hsql::SQLParserResult* result = hsql::SQLParser::parseSQLString(query);
+    std::string param = argv[1];
+    DBMS db;
+    if(param.find("script=") == 0){
 
-    // check whether the parsing was successful
-    if (result->isValid()) {
-        printf("Parsed successfully!\n");
-        printf("Number of statements: %lu\n", result->size());
+        std::ifstream file(param.substr(7));
+        std::stringstream buffer;
+        buffer << file.rdbuf();
+        db.processQuery(buffer.str());
+    }else{
 
-        for (unsigned i = 0; i < result->size(); ++i) {
-            // Print a statement summary.
-            hsql::printStatementInfo(result->getStatement(i));
+        string query = param;
+        while(true){
+            db.setMode(RUN_MODE::INTERACTIVE);
+            if(db.processQuery(query))
+                return 0;
+
+            cout<<"SQL > ";
+            getline(cin, query);
         }
-
-        delete result;
-        return 0;
-    } else {
-        fprintf(stderr, "Given string is not a valid SQL query.\n");
-        fprintf(stderr, "%s (L%d:%d)\n",
-                result->errorMsg(),
-                result->errorLine(),
-                result->errorColumn());
-        delete result;
-        return -1;
     }
 }

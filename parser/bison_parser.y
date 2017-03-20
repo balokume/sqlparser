@@ -176,7 +176,7 @@ int yyerror(YYLTYPE* llocp, SQLParserResult** result, yyscan_t scanner, const ch
 %token LEFT LIKE LOAD NULL PART PLAN SHOW TEXT THEN TIME CHAR
 %token VIEW WHEN WITH ADD ALL AND ASC CSV END FOR INT KEY
 %token NOT OFF SET TBL TOP AS BY IF IN IS OF ON OR TO
-%token QUIT
+%token QUIT SUM
 
 /*********************************
  ** Non-Terminal types (http://www.gnu.org/software/bison/manual/html_node/Type-Decl.html)
@@ -217,6 +217,7 @@ int yyerror(YYLTYPE* llocp, SQLParserResult** result, yyscan_t scanner, const ch
 %type <update_vec>	update_clause_commalist
 %type <column_vec>	column_def_commalist
 %type <sval> 		opt_primary_key
+%type <expr>		sum_expr
 
 /******************************
  ** Token Precedence and Associativity
@@ -636,7 +637,6 @@ opt_limit:
 	|	LIMIT int_literal OFFSET int_literal { $$ = new LimitDescription($2->ival, $4->ival); delete $2; delete $4; }
 	|	/* empty */ { $$ = NULL; }
 	;
-
 	
 /******************************
  * SHOW Statement
@@ -693,6 +693,7 @@ expr:
 	|	exists_expr
 	|	case_expr
 	|	in_expr
+	|	sum_expr
 	;
 
 operand:
@@ -738,6 +739,10 @@ in_expr:
 	|	operand IN '(' select_no_paren ')'		{ $$ = Expr::makeInOperator($1, $4); }
 	|	operand NOT IN '(' select_no_paren ')'	{ $$ = Expr::makeOpUnary(Expr::NOT, Expr::makeInOperator($1, $5)); }
 	;
+	
+sum_expr:
+		SUM '(' expr ')'	{ $$ = Expr::makeSumOperator($3); }
+	;	
 
 // TODO: allow no else specified
 case_expr:
