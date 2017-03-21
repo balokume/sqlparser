@@ -3,12 +3,12 @@
 #include "SQLParser.h"
 #include "sqlhelper.h"
 
-#define log *os
-
 namespace dbms{
+
+ostream* DBMS::os;
+
 DBMS::DBMS() : mode(RUN_MODE::INTERACTIVE)
 {
-
 }
 
 DBMS::~DBMS(){
@@ -16,6 +16,8 @@ DBMS::~DBMS(){
         ((ofstream*)os)->close();
         delete os;
     }
+
+    delete schema;
 }
 
 void DBMS::setMode(RUN_MODE mode){
@@ -23,9 +25,12 @@ void DBMS::setMode(RUN_MODE mode){
 
     if(mode == RUN_MODE::SCRIPT){
         os = new ofstream("output.txt");
+//        os = &std::cout;
     }else{
         os = &std::cout;
     }
+
+    schema = new Schema();
 }
 
 bool DBMS::processQuery(const string &query){
@@ -34,17 +39,21 @@ bool DBMS::processQuery(const string &query){
 
     // check whether the parsing was successful
     if (result->isValid()) {
-        printf("Parsed successfully!\n");
-        printf("Number of statements: %lu\n", result->size());
+//        printf("Parsed successfully!\n");
+//        printf("Number of statements: %lu\n", result->size());
 
         for (unsigned i = 0; i < result->size(); ++i) {
             if(result->getStatement(i)->type() == hsql::StatementType::kStmtQuit){
                 delete result;
                 return true;
             }
+            else{
+//                exec->executeStatement(result->getStatement(i));
+                schema->executeStatement(result->getStatement(i));
+            }
 
             // Print a statement summary.
-            hsql::printStatementInfo(result->getStatement(i));
+//            hsql::printStatementInfo(result->getStatement(i));
         }
 
         delete result;
