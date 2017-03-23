@@ -48,7 +48,7 @@
 extern int hsql_debug;
 #endif
 /* "%code requires" blocks.  */
-#line 41 "bison_parser.y" /* yacc.c:1909  */
+#line 42 "bison_parser.y" /* yacc.c:1909  */
 
 // %code requires block	
 
@@ -217,7 +217,7 @@ extern int hsql_debug;
 typedef union HSQL_STYPE HSQL_STYPE;
 union HSQL_STYPE
 {
-#line 100 "bison_parser.y" /* yacc.c:1909  */
+#line 101 "bison_parser.y" /* yacc.c:1909  */
 
 	double fval;
 	int64_t ival;
