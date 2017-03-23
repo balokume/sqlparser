@@ -39,8 +39,6 @@ bool DBMS::processQuery(const string &query){
 
     // check whether the parsing was successful
     if (result->isValid()) {
-//        printf("Parsed successfully!\n");
-//        printf("Number of statements: %lu\n", result->size());
 
         for (unsigned i = 0; i < result->size(); ++i) {
             if(result->getStatement(i)->type() == hsql::StatementType::kStmtQuit){
@@ -48,22 +46,19 @@ bool DBMS::processQuery(const string &query){
                 return true;
             }
             else{
-//                exec->executeStatement(result->getStatement(i));
                 schema->executeStatement(result->getStatement(i));
+                log()<<endl;
             }
 
             // Print a statement summary.
-//            hsql::printStatementInfo(result->getStatement(i));
+            hsql::printStatementInfo(result->getStatement(i));
         }
 
         delete result;
         return false;
     } else {
-        fprintf(stderr, "Given string is not a valid SQL query.\n");
-        fprintf(stderr, "%s (L%d:%d)\n",
-                result->errorMsg(),
-                result->errorLine(),
-                result->errorColumn());
+        log()<<"Given string is not a valid SQL query."<<endl
+            <<result->errorMsg()<<"("<<result->errorLine()<<":"<<result->errorColumn()<<")"<<endl;
         delete result;
         return false;
     }

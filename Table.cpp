@@ -3,6 +3,7 @@
 #include "dbms.h"
 #include <cstring>
 #include <iomanip>
+#include "TableUtil.h"
 
 using namespace std;
 
@@ -59,6 +60,7 @@ void Table::setColumns(const std::map<string, Column *> &value){
     recordSize = 0;
     rawRecordSize = 0;
     for(auto ele : columns){
+        ele.second->offset = recordSize;
         if(ele.second->type == Column::DataType::INT)
             recordSize += ele.second->size;
         else
@@ -166,7 +168,7 @@ bool Table::insert(const hsql::InsertStatement *stmt){
                 }else{
                     // check type consistency
                     if(col->type == Column::DataType::CHAR){
-                        DBMS::log()<<"Incorrect integer value: '"<<expr->name<<"' for column '"<<col->name<<"'"<<endl;
+                        DBMS::log()<<"Invalid integer value: '"<<expr->name<<"' for column '"<<col->name<<"'"<<endl;
                         os.close();
                         delete row;
                         return false;
@@ -207,48 +209,91 @@ bool Table::insert(const hsql::InsertStatement *stmt){
     return true;
 }
 
+
+
 bool Table::select(const hsql::SelectStatement *stmt){
     ifstream os(filename, ios::in|ios::binary);
     if(!os.is_open()){
         DBMS::log()<<"Can't open database "<<name<<endl;
-        os.close();
         return false;
     }
 
-    for(auto it : columns){
+    // assemble queried columns vector
+    vector<pair<string, Column*>> cols;
+    if(stmt->selectList->size() == 1 && (*stmt->selectList)[0]->type == hsql::kExprStar){    // select *
+        for(auto it : columns)
+            cols.push_back(it);
+    }else{
+        for(hsql::Expr* expr : *stmt->selectList){
+
+            if(expr->type == hsql::kExprLiteralString || expr->type == hsql::kExprColumnRef){   // select C1,C2,...
+                auto it = columns.find(expr->name);
+
+                if(it == columns.end()){
+                    DBMS::log()<<"Column '"<<expr->name<<"' does not exist"<<endl;
+                    return false;
+                }else{
+                    cols.push_back(*it);
+                }
+            }else if(expr->type == hsql::kExprLiteralInt){
+                cols.push_back(make_pair(to_string(expr->ival), (Column*)NULL));
+            }
+        }
+    }
+
+    // check where clause
+    Condition condition = Condition::NONE;
+    if(stmt->whereClause != NULL)
+        condition = TableUtil::checkWhere(stmt->whereClause, columns);
+
+    if(condition == Condition::INVALID)
+        return false;
+
+    // print header
+    for(auto it : cols){
         Column* col = it.second;
-        if(col->type == Column::INT)
-            DBMS::log()<<left<<setw(8)<<setfill(' ')<<col->name;
+        if(col == NULL || col->type == Column::INT )
+            DBMS::log()<<left<<setw(8)<<setfill(' ')<<it.first;
         else if(col->type == Column::CHAR)
-            DBMS::log()<<left<<setw(col->size)<<setfill(' ')<<col->name;
+            DBMS::log()<<left<<setw(col->size)<<setfill(' ')<<it.first;
     }
     DBMS::log()<<endl;
 
-    char* row = new char[recordSize];
-    for(int i = 0; i < records; i++){
-        os.read(row, recordSize);
-        char* ptr = row;
+    if(condition == Condition::NO_DATA)
+        return false;
 
-        for(auto it : columns){
-            Column* col = it.second;
-            if(col->type == Column::INT){
-                int num;
-                memcpy(&num, ptr, col->size);
-                ptr += col->size;
-                DBMS::log()<<left<<setw(8)<<setfill(' ')<<num;
-            }
-            else if(col->type == Column::CHAR){
-                char* str = new char[col->size+1];
-                memcpy(str, ptr, col->size+1);
-                DBMS::log()<<left<<setw(col->size)<<setfill(' ')<<str;
-                delete str;
-                ptr += col->size+1;
-            }
+    // assemble condition columns vector
+    vector<Column*> conCols;
+    if(condition == Condition::NORMAL){
+        auto con = columns.find(stmt->whereClause->expr->name);
+        conCols.push_back(con->second);
+        if(stmt->whereClause->expr2->type == hsql::kExprColumnRef){
+            con = columns.find(stmt->whereClause->expr2->name);
+            conCols.push_back(con->second);
+        }
+    }
+
+    // print records
+    for(int i = 0; i < records; i++){
+        // check condition
+        if(condition == Condition::NORMAL){
+            if(!TableUtil::checkColValueWithCondition(os, i*recordSize, conCols, stmt->whereClause))
+                continue;
         }
 
+
+        for(auto it:cols){
+            Column* col = it.second;
+            if(col != NULL){
+                os.seekg(i*recordSize + col->offset);
+                TableUtil::printColValue(os, col);
+            }
+            else{
+                DBMS::log()<<left<<setw(8)<<setfill(' ')<<it.first;
+            }
+        }
         DBMS::log()<<endl;
     }
-    delete row;
 
     return true;
 }

@@ -23,6 +23,7 @@ struct Column{
     std::string name;
     int size;
     DataType type;
+    int offset = 0;
 };
 
 class Table
@@ -56,6 +57,14 @@ private:
     int records = 0;
     int recordSize = 0;
     int rawRecordSize = 0;
+
+};
+
+enum Condition{
+    NONE = 0,
+    NORMAL = 1,
+    INVALID = 2,
+    NO_DATA = 3,
 };
 
 }

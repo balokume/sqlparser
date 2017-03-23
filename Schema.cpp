@@ -161,7 +161,7 @@ void Schema::executeCreate(const hsql::CreateStatement *stmt){
 void Schema::executeInsert(const hsql::InsertStatement *stmt){
     auto it = tables.find(stmt->tableName);
     if(it == tables.end()){
-        DBMS::log()<<"Can't find table "<<stmt->tableName<<endl;
+        DBMS::log()<<"Table "<<stmt->tableName<<" does not exist"<<endl;
     }else{
         it->second->insert(stmt);
     }
@@ -170,7 +170,7 @@ void Schema::executeInsert(const hsql::InsertStatement *stmt){
 void Schema::executeSelect(const hsql::SelectStatement *stmt){
     auto it = tables.find(stmt->fromTable->name);
     if(it == tables.end()){
-        DBMS::log()<<"Can't find table "<<stmt->fromTable->name<<endl;
+        DBMS::log()<<"Table "<<stmt->fromTable->name<<" does not exist"<<endl;
     }else{
         it->second->select(stmt);
     }

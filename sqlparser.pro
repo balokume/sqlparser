@@ -13,7 +13,8 @@ SOURCES += main.cpp \
     parser/flex_lexer.cpp \
     dbms.cpp \
     Schema.cpp \
-    Table.cpp
+    Table.cpp \
+    TableUtil.cpp
 
 HEADERS += \
     sqlhelper.h \
@@ -40,7 +41,8 @@ HEADERS += \
     dbms.h \
     Schema.h \
     Table.h \
-    defines.h
+    defines.h \
+    TableUtil.h
 
 DISTFILES += \
     parser/bison_parser.output
