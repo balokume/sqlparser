@@ -22,7 +22,7 @@ struct Column{
 
     std::string name;
     int size;
-    int rawSize;
+    int trueSize;
     DataType type;
     int offset = 0;
     Column* clone();
@@ -46,8 +46,8 @@ public:
     std::string getFileName(){return filename;}
     const Column* getPrimaryKey(){return primaryKey;}
     int getRecords(){return records;}
-    int getRecordSize(){return rawRecordSize;}
-    int getTotalSize(){return records*rawRecordSize;}
+    int getRecordSize(){return recordSize;}
+    int getTotalSize(){return records*recordSize;}
     const std::map<std::string, Column*>& getColumns(){return columns;}
     void setRecords(int count){records = count;}
 
@@ -61,7 +61,7 @@ private:
 
     int records = 0;
     int recordSize = 0;
-    int rawRecordSize = 0;
+    int trueRecordSize = 0;
 
 };
 

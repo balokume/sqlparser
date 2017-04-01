@@ -13,14 +13,8 @@ TableUtil::TableUtil()
 }
 
 char* TableUtil::readColBytes(ifstream& os, Column* col){
-    char* bytes = NULL;
-    if(col->type == Column::CHAR){
-        bytes = new char[col->size + 1];
-        os.read(bytes, col->size+1);
-    }else if(col->type == Column::INT){
-        bytes = new char[col->size];
-        os.read(bytes, col->size);
-    }
+    char* bytes = new char[col->trueSize];
+    os.read(bytes, col->trueSize);
     return bytes;
 }
 

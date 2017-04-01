@@ -12,9 +12,9 @@ namespace dbms {
 Column::Column(const std::string &name, DataType type, int size)
     :name(name), type(type), size(size){
     if(type == CHAR)
-        rawSize = size + 1;
+        trueSize = size + 1;
     else
-        rawSize = size;
+        trueSize = size;
 }
 
 Column::Column(){}
@@ -35,12 +35,14 @@ void Column::fromString(const string &str){
     if(tmp == "INT"){
         type = INT;
         size = INT_SIZE;
+        trueSize = size;
     }
     else if(tmp.substr(0, 4) == "CHAR"){
         type = CHAR;
         idx = tmp.find(")");
         tmp  = tmp.substr(5, idx-5);
         size = stoi(tmp);
+        trueSize = size + 1;
     }
 }
 
@@ -67,15 +69,12 @@ Table::Table(const std::string &name):name(name){
 void Table::setColumns(const std::map<string, Column *> &value){
     columns = value;
     recordSize = 0;
-    rawRecordSize = 0;
+    trueRecordSize = 0;
     for(auto ele : columns){
-        ele.second->offset = recordSize;
-        if(ele.second->type == Column::DataType::INT)
-            recordSize += ele.second->size;
-        else
-            recordSize += ele.second->size + 1;
+        ele.second->offset = trueRecordSize;
 
-        rawRecordSize += ele.second->size;
+        recordSize += ele.second->size;
+        trueRecordSize += ele.second->trueSize;
     }
 }
 
@@ -123,7 +122,7 @@ bool Table::insert(const hsql::InsertStatement *stmt){
             }
         }
 
-        char* row = new char[recordSize];
+        char* row = new char[trueRecordSize];
         char* ptr = row;
         int idx = 0;
         for(auto it : columns){
@@ -153,7 +152,7 @@ bool Table::insert(const hsql::InsertStatement *stmt){
                             return false;
                         }
                         memcpy(ptr, expr->name, strlen(expr->name)+1);
-                        ptr += col->size+1;
+                        ptr += col->trueSize;
                     }else if(expr->type == hsql::kExprLiteralInt){
                         const char* str = to_string(expr->ival).c_str();
                         // check size
@@ -164,7 +163,7 @@ bool Table::insert(const hsql::InsertStatement *stmt){
                             return false;
                         }
                         memcpy(ptr, str, strlen(str)+1);
-                        ptr += col->size+1;
+                        ptr += col->trueSize;
                     }else{
                         DBMS::log()<<"Unexpeced data type"<<endl;
                         os.close();
@@ -180,7 +179,7 @@ bool Table::insert(const hsql::InsertStatement *stmt){
                         return false;
                     }else if(expr->type == hsql::kExprLiteralInt){
                         memcpy(ptr, &expr->ival, INT_SIZE);
-                        ptr += col->size;
+                        ptr += col->trueSize;
                     }else{
                         DBMS::log()<<"Unexpeced data type"<<endl;
                         os.close();
@@ -193,17 +192,17 @@ bool Table::insert(const hsql::InsertStatement *stmt){
             }else{  // not specified in statement, assign NULL
                 if(col->type == Column::DataType::CHAR){
                     ptr[0] = '\0';
-                    ptr += col->size+1;
+                    ptr += col->trueSize;
                 }else{
-                    memset(ptr, 0, col->size);
-                    ptr += col->size;
+                    memset(ptr, 0, col->trueSize);
+                    ptr += col->trueSize;
                 }
             }
 
             idx++;
         }
 
-        os.write(row, recordSize);
+        os.write(row, trueRecordSize);
         delete row;
         records++;
     }else{  // insert by selection
@@ -292,7 +291,7 @@ bool Table::select(const hsql::SelectStatement *stmt, Table* dstTable){
             for(auto it:cols){
                 Column* col = it.second;
                 if(col != NULL){
-                    os.seekg(i*recordSize + col->offset);
+                    os.seekg(i*trueRecordSize + col->offset);
                     TableUtil::printColValue(os, col);
                 }
                 else{
@@ -310,19 +309,19 @@ bool Table::select(const hsql::SelectStatement *stmt, Table* dstTable){
                 Column* col = it.second;
                 if(col != NULL){
                     insertStmt->columns->push_back(strdup(col->name.c_str()));
-                    os.seekg(i*recordSize + col->offset);
+                    os.seekg(i*trueRecordSize + col->offset);
                     if(col->type == Column::CHAR){
 
-                        char *bytes = new char[col->size + 1];
-                        os.read(bytes, col->size+1);
+                        char *bytes = new char[col->trueSize];
+                        os.read(bytes, col->trueSize);
 
                         hsql::Expr* expr = new hsql::Expr(hsql::kExprLiteralString);
                         expr->name = bytes;
                         insertStmt->values->push_back(expr);
                     }else if(col->type == Column::INT){
 
-                        char *bytes = new char[col->size];
-                        os.read(bytes, col->size);
+                        char *bytes = new char[col->trueSize];
+                        os.read(bytes, col->trueSize);
                         hsql::Expr* expr = new hsql::Expr(hsql::kExprLiteralInt);\
                         expr->ival = *reinterpret_cast<int*>(bytes);
                         insertStmt->values->push_back(expr);
