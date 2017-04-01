@@ -11,6 +11,15 @@ Schema::Schema()
 }
 
 Schema::~Schema(){
+    for(auto it = tables.cbegin(); it != tables.cend();){
+        if(it->second->temporary){
+            it->second->removeFile();
+            it = tables.erase(it);
+        }else{
+            it++;
+        }
+    }
+
     saveToFile();
 
     for(auto ele : tables)
@@ -150,12 +159,17 @@ void Schema::executeCreate(const hsql::CreateStatement *stmt){
         }
 
         tbl->setColumns(columns);
-        tbl->setPrimaryKey(stmt->primaryKey->name);
+        if(stmt->primaryKey != NULL)
+            tbl->setPrimaryKey(stmt->primaryKey->name);
 
         tables.insert(pair<string, Table*>(stmt->tableName, tbl));
+
+        DBMS::log()<<"Create table "<<stmt->tableName<<" success"<<endl;
     }
-    else
+    else{
         delete tbl;
+        DBMS::log()<<"Create table "<<stmt->tableName<<" fail"<<endl;
+    }
 }
 
 void Schema::executeInsert(const hsql::InsertStatement *stmt){
@@ -163,17 +177,86 @@ void Schema::executeInsert(const hsql::InsertStatement *stmt){
     if(it == tables.end()){
         DBMS::log()<<"Table "<<stmt->tableName<<" does not exist"<<endl;
     }else{
-        it->second->insert(stmt);
+        if(it->second->insert(stmt))
+            DBMS::log()<<"Insert success"<<endl;
     }
 }
 
 void Schema::executeSelect(const hsql::SelectStatement *stmt){
-    auto it = tables.find(stmt->fromTable->name);
-    if(it == tables.end()){
-        DBMS::log()<<"Table "<<stmt->fromTable->name<<" does not exist"<<endl;
-    }else{
-        it->second->select(stmt);
+    if(stmt->fromTable->type == hsql::kTableName){
+        auto it = tables.find(stmt->fromTable->name);
+        if(it == tables.end()){
+            DBMS::log()<<"Table "<<stmt->fromTable->name<<" does not exist"<<endl;
+        }else{
+            it->second->select(stmt);
+        }
+    }else if(stmt->fromTable->type == hsql::kTableSelect){
+        if(createRefTable(stmt->fromTable)){
+            auto it = tables.find(stmt->fromTable->alias);
+            it->second->select(stmt);
+        }
     }
+}
+
+bool Schema::createRefTable(hsql::TableRef *ref){
+    string tmpTableName = ref->alias;
+    string fromTableName = ref->select->fromTable->getName();
+
+    if(ref->select->fromTable->type == hsql::kTableSelect){
+        if(!createRefTable(ref->select->fromTable))
+            return false;
+    }else{
+    }
+
+    auto it = tables.find(tmpTableName);
+    if(it != tables.end()){
+        DBMS::log()<<"Table "<<tmpTableName<<" already exists"<<endl;
+        return false;
+    }
+
+    auto fromTbl = tables.find(fromTableName);
+    if(fromTbl == tables.end()){
+        DBMS::log()<<"Table "<<fromTableName<<" does not exist"<<endl;
+        return false;
+    }
+
+    Table* tmpTbl = new Table(tmpTableName);
+    tmpTbl->temporary = true;
+    if(tmpTbl->createFile()){
+        map<string, Column*> columns;
+        if(ref->select->selectList->size() == 1 && (*ref->select->selectList)[0]->type == hsql::kExprStar){    // select *
+            for(auto col : fromTbl->second->getColumns()){
+                columns.insert(make_pair(col.first, col.second->clone()));
+            }
+        }else{
+            for (hsql::Expr* expr : *(ref->select->selectList)) {
+                auto col = fromTbl->second->getColumns().find(expr->name);
+                if(col == fromTbl->second->getColumns().end()){
+                    DBMS::log()<<"Column '"<<expr->name<<"' does not exist"<<endl;
+                    delete tmpTbl;
+                    return false;
+                }
+
+                columns.insert(make_pair(col->first, col->second->clone()));
+            }
+        }
+
+        tmpTbl->setColumns(columns);
+
+
+        if(fromTbl->second->select(ref->select, tmpTbl))
+            tables.insert(pair<string, Table*>(tmpTableName, tmpTbl));
+        else{
+            delete tmpTbl;
+            return false;
+        }
+    }
+    else{
+        delete tmpTbl;
+        return false;
+    }
+
+    return true;
 }
 
 void Schema::executeShow(const hsql::ShowStatement *stmt){

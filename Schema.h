@@ -22,6 +22,8 @@ private:
     void executeShow(const hsql::ShowStatement* stmt);
     void executeDrop(const hsql::DropStatement* stmt);
 
+    bool createRefTable( hsql::TableRef* ref);
+
     std::map<std::string, Table*> tables;
 };
 }

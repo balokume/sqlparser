@@ -11,7 +11,10 @@ namespace dbms {
 
 Column::Column(const std::string &name, DataType type, int size)
     :name(name), type(type), size(size){
-
+    if(type == CHAR)
+        rawSize = size + 1;
+    else
+        rawSize = size;
 }
 
 Column::Column(){}
@@ -39,6 +42,12 @@ void Column::fromString(const string &str){
         tmp  = tmp.substr(5, idx-5);
         size = stoi(tmp);
     }
+}
+
+Column* Column::clone(){
+    Column* col = new Column();
+    memcpy(col, this, sizeof(Column));
+    return col;
 }
 
 Table::Table()
@@ -76,14 +85,11 @@ void Table::setPrimaryKey(const string &colName){
 
 bool Table::createFile(){
     ofstream os(filename, ios::out | ios::binary);
-    if(!os.is_open()){
-        DBMS::log()<<"Create table "<<name<<" fail"<<endl;
-        return false;
-    }else{
-        DBMS::log()<<"Create table "<<name<<" success"<<endl;
-        os.close();
-        return true;
-    }
+    return os.is_open();
+}
+
+bool Table::removeFile(){
+    return remove(filename.c_str());
 }
 
 bool Table::insert(const hsql::InsertStatement *stmt){
@@ -203,16 +209,15 @@ bool Table::insert(const hsql::InsertStatement *stmt){
     }else{  // insert by selection
 
     }
-
-    DBMS::log()<<"Insert success"<<endl;
     os.close();
     return true;
 }
 
 
 
-bool Table::select(const hsql::SelectStatement *stmt){
+bool Table::select(const hsql::SelectStatement *stmt, Table* dstTable){
     ifstream os(filename, ios::in|ios::binary);
+
     if(!os.is_open()){
         DBMS::log()<<"Can't open database "<<name<<endl;
         return false;
@@ -250,14 +255,16 @@ bool Table::select(const hsql::SelectStatement *stmt){
         return false;
 
     // print header
-    for(auto it : cols){
-        Column* col = it.second;
-        if(col == NULL || col->type == Column::INT )
-            DBMS::log()<<left<<setw(8)<<setfill(' ')<<it.first;
-        else if(col->type == Column::CHAR)
-            DBMS::log()<<left<<setw(col->size)<<setfill(' ')<<it.first;
+    if(dstTable == NULL){
+        for(auto it : cols){
+            Column* col = it.second;
+            if(col == NULL || col->type == Column::INT )
+                DBMS::log()<<left<<setw(8)<<setfill(' ')<<it.first;
+            else if(col->type == Column::CHAR)
+                DBMS::log()<<left<<setw(col->size)<<setfill(' ')<<it.first;
+        }
+        DBMS::log()<<endl;
     }
-    DBMS::log()<<endl;
 
     if(condition == Condition::NO_DATA)
         return false;
@@ -281,20 +288,58 @@ bool Table::select(const hsql::SelectStatement *stmt){
                 continue;
         }
 
+        if(dstTable == NULL){
+            for(auto it:cols){
+                Column* col = it.second;
+                if(col != NULL){
+                    os.seekg(i*recordSize + col->offset);
+                    TableUtil::printColValue(os, col);
+                }
+                else{
+                    DBMS::log()<<left<<setw(8)<<setfill(' ')<<it.first;
+                }
+            }
+            DBMS::log()<<endl;
+        }else{
+            hsql::InsertStatement* insertStmt = new hsql::InsertStatement(hsql::InsertStatement::kInsertValues);
+            insertStmt->tableName = strdup(dstTable->getName().c_str());
+            insertStmt->columns = new vector<char*>;
+            insertStmt->values = new vector<hsql::Expr*>;
 
-        for(auto it:cols){
-            Column* col = it.second;
-            if(col != NULL){
-                os.seekg(i*recordSize + col->offset);
-                TableUtil::printColValue(os, col);
+            for(auto it:cols){
+                Column* col = it.second;
+                if(col != NULL){
+                    insertStmt->columns->push_back(strdup(col->name.c_str()));
+                    os.seekg(i*recordSize + col->offset);
+                    if(col->type == Column::CHAR){
+
+                        char *bytes = new char[col->size + 1];
+                        os.read(bytes, col->size+1);
+
+                        hsql::Expr* expr = new hsql::Expr(hsql::kExprLiteralString);
+                        expr->name = bytes;
+                        insertStmt->values->push_back(expr);
+                    }else if(col->type == Column::INT){
+
+                        char *bytes = new char[col->size];
+                        os.read(bytes, col->size);
+                        hsql::Expr* expr = new hsql::Expr(hsql::kExprLiteralInt);\
+                        expr->ival = *reinterpret_cast<int*>(bytes);
+                        insertStmt->values->push_back(expr);
+                        delete bytes;
+                    }
+                }
+                else{
+                    hsql::Expr* expr = new hsql::Expr(hsql::kExprLiteralInt);\
+                    expr->ival = stoi(it.first);
+                    insertStmt->values->push_back(expr);
+                }
             }
-            else{
-                DBMS::log()<<left<<setw(8)<<setfill(' ')<<it.first;
-            }
+
+            dstTable->insert(insertStmt);
+            delete insertStmt;
         }
-        DBMS::log()<<endl;
     }
-
     return true;
 }
 }

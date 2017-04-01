@@ -22,8 +22,10 @@ struct Column{
 
     std::string name;
     int size;
+    int rawSize;
     DataType type;
     int offset = 0;
+    Column* clone();
 };
 
 class Table
@@ -36,17 +38,20 @@ public:
     void setColumns(const std::map<std::string, Column*>& value);
     void setPrimaryKey(const std::string& colName);
     bool createFile();
+    bool removeFile();
     bool insert(const hsql::InsertStatement *stmt);
-    bool select(const hsql::SelectStatement *stmt);
+    bool select(const hsql::SelectStatement *stmt, Table* dstTable = NULL);
 
-    std::string getName(){return name;};
-    const Column* getPrimaryKey(){return primaryKey;};
-    int getRecords(){return records;};
-    int getRecordSize(){return rawRecordSize;};
-    int getTotalSize(){return records*rawRecordSize;};
-    const std::map<std::string, Column*>& getColumns(){return columns;};
-    void setRecords(int count){records = count;};
+    std::string getName(){return name;}
+    std::string getFileName(){return filename;}
+    const Column* getPrimaryKey(){return primaryKey;}
+    int getRecords(){return records;}
+    int getRecordSize(){return rawRecordSize;}
+    int getTotalSize(){return records*rawRecordSize;}
+    const std::map<std::string, Column*>& getColumns(){return columns;}
+    void setRecords(int count){records = count;}
 
+    bool temporary = false;
 private:
 
     std::string name;
