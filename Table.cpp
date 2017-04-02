@@ -66,6 +66,10 @@ Table::Table(const std::string &name):name(name){
     filename = TABLE_DIR + name + ".tbl";
 }
 
+Column* Table::getColumn(const std::string& colName){
+    return columns[colName];
+}
+
 void Table::setColumns(const std::map<string, Column *> &value){
     columns = value;
     recordSize = 0;
@@ -96,17 +100,18 @@ bool Table::insert(const hsql::InsertStatement *stmt){
     ofstream os(filename, ios::out|ios::binary|ios::app);
     if(!os.is_open()){
         DBMS::log()<<"Can't open database "<<name<<endl;
-        os.close();
         return false;
     }
 
     // insert by values
     if(stmt->type == hsql::InsertStatement::kInsertValues){
         // check size of column and value in statements
-        if(stmt->columns != NULL && stmt->columns->size() != stmt->values->size() ||
-           stmt->columns == NULL && columns.size() != stmt->values->size() ){
+        if(stmt->columns != NULL && stmt->columns->size() != stmt->values->size()){
             DBMS::log()<<"Column count doesn't match value count"<<endl;
-            os.close();
+            return false;
+        }
+        if(stmt->columns == NULL && columns.size() < stmt->values->size()){
+            DBMS::log()<<"INSERT has more expressions than target columns"<<endl;
             return false;
         }
 
@@ -116,7 +121,6 @@ bool Table::insert(const hsql::InsertStatement *stmt){
                 auto it = columns.find(col_name);
                 if(it == columns.end()){
                     DBMS::log()<<"Unknown column "<<col_name<<" in 'field list'"<<endl;
-                    os.close();
                     return false;
                 }
             }
@@ -138,7 +142,10 @@ bool Table::insert(const hsql::InsertStatement *stmt){
                 }
 
             }else{
-                expr = (*stmt->values)[idx];
+                if(idx < stmt->values->size())
+                    expr = (*stmt->values)[idx];
+                else
+                    expr = NULL;
             }
 
             if(expr != NULL){
@@ -147,7 +154,6 @@ bool Table::insert(const hsql::InsertStatement *stmt){
                         // check size
                         if(strlen(expr->name) > col->size){
                             DBMS::log()<<"Data too long for column '"<<col->name<<"'"<<endl;
-                            os.close();
                             delete row;
                             return false;
                         }
@@ -158,7 +164,6 @@ bool Table::insert(const hsql::InsertStatement *stmt){
                         // check size
                         if(strlen(str) > col->size){
                             DBMS::log()<<"Data too long for column '"<<col->name<<"'"<<endl;
-                            os.close();
                             delete row;
                             return false;
                         }
@@ -166,15 +171,13 @@ bool Table::insert(const hsql::InsertStatement *stmt){
                         ptr += col->trueSize;
                     }else{
                         DBMS::log()<<"Unexpeced data type"<<endl;
-                        os.close();
                         delete row;
                         return false;
                     }
                 }else{
                     // check type consistency
-                    if(col->type == Column::DataType::CHAR){
+                    if(expr->type == hsql::kExprLiteralString){
                         DBMS::log()<<"Invalid integer value: '"<<expr->name<<"' for column '"<<col->name<<"'"<<endl;
-                        os.close();
                         delete row;
                         return false;
                     }else if(expr->type == hsql::kExprLiteralInt){
@@ -182,7 +185,6 @@ bool Table::insert(const hsql::InsertStatement *stmt){
                         ptr += col->trueSize;
                     }else{
                         DBMS::log()<<"Unexpeced data type"<<endl;
-                        os.close();
                         delete row;
                         return false;
                     }
@@ -206,7 +208,6 @@ bool Table::insert(const hsql::InsertStatement *stmt){
         delete row;
         records++;
     }else{  // insert by selection
-
     }
     os.close();
     return true;
@@ -214,7 +215,7 @@ bool Table::insert(const hsql::InsertStatement *stmt){
 
 
 
-bool Table::select(const hsql::SelectStatement *stmt, Table* dstTable){
+bool Table::select(const hsql::SelectStatement *stmt, Table* dstTable, hsql::InsertStatement* insertStmt){
     ifstream os(filename, ios::in|ios::binary);
 
     if(!os.is_open()){
@@ -279,11 +280,12 @@ bool Table::select(const hsql::SelectStatement *stmt, Table* dstTable){
         }
     }
 
+    bool hasInsertStatement = insertStmt != NULL;
     // print records
     for(int i = 0; i < records; i++){
         // check condition
         if(condition == Condition::NORMAL){
-            if(!TableUtil::checkColValueWithCondition(os, i*recordSize, conCols, stmt->whereClause))
+            if(!TableUtil::checkColValueWithCondition(os, i*trueRecordSize, conCols, stmt->whereClause))
                 continue;
         }
 
@@ -300,28 +302,32 @@ bool Table::select(const hsql::SelectStatement *stmt, Table* dstTable){
             }
             DBMS::log()<<endl;
         }else{
-            hsql::InsertStatement* insertStmt = new hsql::InsertStatement(hsql::InsertStatement::kInsertValues);
-            insertStmt->tableName = strdup(dstTable->getName().c_str());
-            insertStmt->columns = new vector<char*>;
+            if(!hasInsertStatement){
+                insertStmt = new hsql::InsertStatement(hsql::InsertStatement::kInsertValues);
+                insertStmt->tableName = strdup(dstTable->getName().c_str());
+                insertStmt->columns = new vector<char*>;
+            }
+
             insertStmt->values = new vector<hsql::Expr*>;
 
-            for(auto it:cols){
-                Column* col = it.second;
-                if(col != NULL){
-                    insertStmt->columns->push_back(strdup(col->name.c_str()));
-                    os.seekg(i*trueRecordSize + col->offset);
-                    if(col->type == Column::CHAR){
+            for(auto itFromCol:cols){
+                Column* fromCol = itFromCol.second;
+                if(fromCol != NULL){
+                    if(!hasInsertStatement)
+                        insertStmt->columns->push_back(strdup(fromCol->name.c_str()));
+                    os.seekg(i*trueRecordSize + fromCol->offset);
+                    if(fromCol->type == Column::CHAR){
 
-                        char *bytes = new char[col->trueSize];
-                        os.read(bytes, col->trueSize);
+                        char *bytes = new char[fromCol->trueSize];
+                        os.read(bytes, fromCol->trueSize);
 
                         hsql::Expr* expr = new hsql::Expr(hsql::kExprLiteralString);
                         expr->name = bytes;
                         insertStmt->values->push_back(expr);
-                    }else if(col->type == Column::INT){
+                    }else if(fromCol->type == Column::INT){
 
-                        char *bytes = new char[col->trueSize];
-                        os.read(bytes, col->trueSize);
+                        char *bytes = new char[fromCol->trueSize];
+                        os.read(bytes, fromCol->trueSize);
                         hsql::Expr* expr = new hsql::Expr(hsql::kExprLiteralInt);\
                         expr->ival = *reinterpret_cast<int*>(bytes);
                         insertStmt->values->push_back(expr);
@@ -330,13 +336,20 @@ bool Table::select(const hsql::SelectStatement *stmt, Table* dstTable){
                 }
                 else{
                     hsql::Expr* expr = new hsql::Expr(hsql::kExprLiteralInt);\
-                    expr->ival = stoi(it.first);
+                    expr->ival = stoi(itFromCol.first);
                     insertStmt->values->push_back(expr);
                 }
             }
 
-            dstTable->insert(insertStmt);
-            delete insertStmt;
+            bool insertSuccess = dstTable->insert(insertStmt);
+            if(hasInsertStatement){
+                delete insertStmt->values;
+                insertStmt->values = NULL;
+            }
+            else
+                delete insertStmt;
+
+            if(!insertSuccess)  return false;
         }
     }
     return true;

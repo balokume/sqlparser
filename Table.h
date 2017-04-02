@@ -35,12 +35,13 @@ public:
     Table(const std::string& name);
     virtual ~Table();
 
+    Column* getColumn(const std::string& colName);
     void setColumns(const std::map<std::string, Column*>& value);
     void setPrimaryKey(const std::string& colName);
     bool createFile();
     bool removeFile();
     bool insert(const hsql::InsertStatement *stmt);
-    bool select(const hsql::SelectStatement *stmt, Table* dstTable = NULL);
+    bool select(const hsql::SelectStatement *stmt, Table* dstTable = NULL, hsql::InsertStatement* insertStmt = NULL);
 
     std::string getName(){return name;}
     std::string getFileName(){return filename;}

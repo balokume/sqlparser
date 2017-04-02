@@ -46,14 +46,13 @@ bool DBMS::processQuery(const string &query){
                 return true;
             }
             else{
-                schema->executeStatement(result->getStatement(i));
+                schema->executeStatement(result->getMutableStatement(i));
                 log()<<endl;
             }
 
             // Print a statement summary.
-//            hsql::printStatementInfo(result->getStatement(i));
+            //hsql::printStatementInfo(result->getStatement(i));
         }
-
         delete result;
         return false;
     } else {

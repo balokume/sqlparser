@@ -12,15 +12,15 @@ public:
 
     void saveToFile();
 
-    void executeStatement(const hsql::SQLStatement* stmt);
+    void executeStatement(hsql::SQLStatement* stmt);
 private:
     void loadFromFile();
 
-    void executeCreate(const hsql::CreateStatement* stmt);
-    void executeInsert(const hsql::InsertStatement* stmt);
-    void executeSelect(const hsql::SelectStatement* stmt);
-    void executeShow(const hsql::ShowStatement* stmt);
-    void executeDrop(const hsql::DropStatement* stmt);
+    void executeCreate(hsql::CreateStatement* stmt);
+    void executeInsert(hsql::InsertStatement* stmt);
+    void executeSelect(hsql::SelectStatement* stmt);
+    void executeShow(hsql::ShowStatement* stmt);
+    void executeDrop(hsql::DropStatement* stmt);
 
     bool createRefTable( hsql::TableRef* ref);
 

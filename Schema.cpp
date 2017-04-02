@@ -46,7 +46,6 @@ void Schema::loadFromFile(){
         // tablename
         string name = line.substr(10);
         Table* tbl = new Table(name);
-
         // columns
         getline(is, line);
         map<string, Column*> columns;
@@ -85,6 +84,7 @@ void Schema::loadFromFile(){
 
 void Schema::saveToFile(){
     ofstream os(CATALOG_FILE);
+
     for(auto t : tables){
         Table* tbl = t.second;
         os<<"tablename="<<tbl->getName()<<endl;
@@ -107,29 +107,29 @@ void Schema::saveToFile(){
     os.close();
 }
 
-void Schema::executeStatement(const hsql::SQLStatement *stmt){
+void Schema::executeStatement(hsql::SQLStatement *stmt){
     switch (stmt->type()) {
     case hsql::kStmtCreate:
-        executeCreate((const hsql::CreateStatement*)stmt);
+        executeCreate((hsql::CreateStatement*)stmt);
         break;
     case hsql::kStmtSelect:
-        executeSelect((const hsql::SelectStatement*)stmt);
+        executeSelect((hsql::SelectStatement*)stmt);
         break;
     case hsql::kStmtInsert:
-        executeInsert((const hsql::InsertStatement*)stmt);
+        executeInsert((hsql::InsertStatement*)stmt);
         break;
     case hsql::kStmtShow:
-        executeShow((const hsql::ShowStatement*)stmt);
+        executeShow((hsql::ShowStatement*)stmt);
         break;
     case hsql::kStmtDrop:
-        executeDrop((const hsql::DropStatement*)stmt);
+        executeDrop((hsql::DropStatement*)stmt);
         break;
     default:
         break;
     }
 }
 
-void Schema::executeCreate(const hsql::CreateStatement *stmt){
+void Schema::executeCreate(hsql::CreateStatement *stmt){
     auto it = tables.find(stmt->tableName);
     if(it != tables.end()){
         DBMS::log()<<"Table "<<stmt->tableName<<" already exists"<<endl;
@@ -172,17 +172,65 @@ void Schema::executeCreate(const hsql::CreateStatement *stmt){
     }
 }
 
-void Schema::executeInsert(const hsql::InsertStatement *stmt){
+void Schema::executeInsert(hsql::InsertStatement *stmt){
     auto it = tables.find(stmt->tableName);
     if(it == tables.end()){
         DBMS::log()<<"Table "<<stmt->tableName<<" does not exist"<<endl;
     }else{
-        if(it->second->insert(stmt))
-            DBMS::log()<<"Insert success"<<endl;
+        if(stmt->type == hsql::InsertStatement::kInsertValues){ // insert from values
+            if(it->second->insert(stmt))
+                DBMS::log()<<"Insert success"<<endl;
+        }else{
+            if(stmt->select->fromTable->type == hsql::kTableName){  // insert from signle select
+
+            }else if(stmt->select->fromTable->type == hsql::kTableSelect){  // insert from nested select
+                createRefTable(stmt->select->fromTable);
+            }
+
+            string fromTableName = stmt->select->fromTable->getName();
+            auto fromTbl = tables.find(fromTableName);
+            if(fromTbl == tables.end()){
+                DBMS::log()<<"Table "<<fromTableName<<" does not exist"<<endl;
+                return;
+            }
+
+            // compare column count
+            int numFromCols, numToCols;
+            if(stmt->select->selectList->size() == 1 && (*stmt->select->selectList)[0]->type == hsql::kExprStar){
+                numFromCols = fromTbl->second->getColumns().size();
+            }else{
+                numFromCols = stmt->select->selectList->size();
+            }
+
+            if(stmt->columns == NULL){
+                numToCols = it->second->getColumns().size();
+                if(numFromCols > numToCols){
+                    DBMS::log()<<"INSERT has more expressions than target columns"<<endl;
+                    return;
+                }
+            }else{
+                numToCols = stmt->columns->size();
+                if(numToCols > numFromCols){
+                    DBMS::log()<<"INSERT has more target columns than expressions"<<endl;
+                    return;
+                }else if(numToCols < numFromCols){
+                    DBMS::log()<<"INSERT has more expressions than target columns"<<endl;
+                    return;
+                }
+
+            }
+
+            // insert from selection
+            stmt->type = hsql::InsertStatement::kInsertValues;
+            bool success = fromTbl->second->select(stmt->select, it->second, stmt);
+            stmt->type = hsql::InsertStatement::kInsertSelect;
+            if(success)
+                DBMS::log()<<"Insert success"<<endl;
+        }
     }
 }
 
-void Schema::executeSelect(const hsql::SelectStatement *stmt){
+void Schema::executeSelect(hsql::SelectStatement *stmt){
     if(stmt->fromTable->type == hsql::kTableName){
         auto it = tables.find(stmt->fromTable->name);
         if(it == tables.end()){
@@ -259,11 +307,11 @@ bool Schema::createRefTable(hsql::TableRef *ref){
     return true;
 }
 
-void Schema::executeShow(const hsql::ShowStatement *stmt){
+void Schema::executeShow(hsql::ShowStatement *stmt){
 
 }
 
-void Schema::executeDrop(const hsql::DropStatement *stmt){
+void Schema::executeDrop(hsql::DropStatement *stmt){
 
 }
 
