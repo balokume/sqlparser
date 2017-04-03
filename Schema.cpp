@@ -407,7 +407,32 @@ bool Schema::createRefTableFromJoin(hsql::TableRef *ref){
 }
 
 void Schema::executeShow(hsql::ShowStatement *stmt){
+    vector<string> tableNames;
+    if(stmt->type == hsql::ShowStatement::kTable){
+        tableNames.push_back(stmt->tableName);
+    }else{
+        for(auto it : tables)
+            tableNames.push_back(it.first);
+    }
 
+    for(string tableName : tableNames){
+        Table* tbl = getTable(tableName);
+        if(tbl == NULL){
+            DBMS::log()<<"Table "<<tableName<<" does not exist"<<endl;
+            return;
+        }
+        DBMS::log()<<"Table "<<tbl->getName()<<"(";
+        string str;
+        for(auto it : tbl->getColumns()){
+           str += it->toString() + ",";
+        }
+        DBMS::log()<<str<<"PRIMARY KEY=";
+        if(tbl->getPrimaryKey() != NULL)
+            DBMS::log()<<tbl->getPrimaryKey()->name;
+        else
+            DBMS::log()<<"NULL";
+        DBMS::log()<<")"<<endl;
+    }
 }
 
 void Schema::executeDrop(hsql::DropStatement *stmt){
