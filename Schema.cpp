@@ -2,6 +2,7 @@
 #include "dbms.h"
 #include <sstream>
 #include <iterator>
+#include <cstring>
 using namespace std;
 
 namespace dbms{
@@ -14,6 +15,7 @@ Schema::~Schema(){
     for(auto it = tables.cbegin(); it != tables.cend();){
         if(it->second->temporary){
             it->second->removeFile();
+            delete it->second;
             it = tables.erase(it);
         }else{
             it++;
@@ -48,14 +50,14 @@ void Schema::loadFromFile(){
         Table* tbl = new Table(name);
         // columns
         getline(is, line);
-        map<string, Column*> columns;
+        vector<Column*> columns;
         string strCol = line.substr(8);
         vector<string> tokens = split(strCol, ',');
         for(auto col_str:tokens){
 
             Column* col = new Column();
             col->fromString(col_str);
-            columns.insert(make_pair(col->name, col));
+            columns.push_back(col);
         }
 
         tbl->setColumns(columns);
@@ -91,7 +93,7 @@ void Schema::saveToFile(){
         os<<"columns=";
         string str;
         for(auto it : tbl->getColumns()){
-           str += it.second->toString() + ",";
+           str += it->toString() + ",";
         }
         os<<str.substr(0, str.size()-1)<<endl;
         os<<"primary key=";
@@ -105,6 +107,14 @@ void Schema::saveToFile(){
     }
 
     os.close();
+}
+
+Table* Schema::getTable(const string &tableName){
+    auto it = tables.find(tableName);
+    if(it == tables.end())
+        return NULL;
+    else
+        return it->second;
 }
 
 void Schema::executeStatement(hsql::SQLStatement *stmt){
@@ -138,7 +148,7 @@ void Schema::executeCreate(hsql::CreateStatement *stmt){
 
     Table* tbl = new Table(stmt->tableName);
     if(tbl->createFile()){
-        map<string, Column*> columns;
+        vector<Column*> columns;
         for (hsql::ColumnDefinition* col_def : *stmt->columns) {
             Column::DataType type;
             int size;
@@ -155,7 +165,7 @@ void Schema::executeCreate(hsql::CreateStatement *stmt){
                 return;
             }
             Column* col = new Column(col_def->name, type, size);
-            columns.insert(make_pair(col->name, col));
+            columns.push_back(col);
         }
 
         tbl->setColumns(columns);
@@ -238,19 +248,31 @@ void Schema::executeSelect(hsql::SelectStatement *stmt){
         }else{
             it->second->select(stmt);
         }
-    }else if(stmt->fromTable->type == hsql::kTableSelect){
+    }else{
         if(createRefTable(stmt->fromTable)){
-            auto it = tables.find(stmt->fromTable->alias);
-            it->second->select(stmt);
+            Table* fromTbl = getTable(stmt->fromTable->alias);
+            if(fromTbl != NULL)
+                fromTbl->select(stmt);
         }
     }
 }
 
 bool Schema::createRefTable(hsql::TableRef *ref){
+    if(ref->type == hsql::kTableSelect){
+        return createRefTableFromSelect(ref);
+    }else if(ref->type == hsql::kTableJoin){
+        return createRefTableFromJoin(ref);
+    }
+    return true;
+}
+
+bool Schema::createRefTableFromSelect(hsql::TableRef *ref){
+    DBMS::log()<<ref->alias<<endl;
     string tmpTableName = ref->alias;
     string fromTableName = ref->select->fromTable->getName();
+    DBMS::log()<<fromTableName<<endl;
 
-    if(ref->select->fromTable->type == hsql::kTableSelect){
+    if(ref->select->fromTable->type != hsql::kTableName){
         if(!createRefTable(ref->select->fromTable))
             return false;
     }else{
@@ -271,21 +293,21 @@ bool Schema::createRefTable(hsql::TableRef *ref){
     Table* tmpTbl = new Table(tmpTableName);
     tmpTbl->temporary = true;
     if(tmpTbl->createFile()){
-        map<string, Column*> columns;
+        vector<Column*> columns;
         if(ref->select->selectList->size() == 1 && (*ref->select->selectList)[0]->type == hsql::kExprStar){    // select *
             for(auto col : fromTbl->second->getColumns()){
-                columns.insert(make_pair(col.first, col.second->clone()));
+                columns.push_back(col->clone());
             }
         }else{
             for (hsql::Expr* expr : *(ref->select->selectList)) {
-                auto col = fromTbl->second->getColumns().find(expr->name);
-                if(col == fromTbl->second->getColumns().end()){
+                Column* col = fromTbl->second->getColumn(expr->name);
+                if(col == NULL){
                     DBMS::log()<<"Column '"<<expr->name<<"' does not exist"<<endl;
                     delete tmpTbl;
                     return false;
                 }
 
-                columns.insert(make_pair(col->first, col->second->clone()));
+                columns.push_back(col->clone());
             }
         }
 
@@ -304,6 +326,83 @@ bool Schema::createRefTable(hsql::TableRef *ref){
         return false;
     }
 
+    return true;
+}
+
+bool Schema::createRefTableFromJoin(hsql::TableRef *ref){
+    string leftTableName = ref->join->left->getName();
+    if(!createRefTable(ref->join->left))
+        return false;
+    Table* leftTable = getTable(leftTableName);
+    if(leftTable == NULL){
+        DBMS::log()<<"Table "<<leftTableName<<" does not exist"<<endl;
+        return false;
+    }
+
+    string rightTableName = ref->join->right->getName();
+    if(!createRefTable(ref->join->right))
+        return false;
+    Table* rightTable = getTable(rightTableName);
+    if(rightTable == NULL){
+        DBMS::log()<<"Table "<<rightTableName<<" does not exist"<<endl;
+        return false;
+    }
+
+    if(ref->join->condition->type != hsql::kExprOperator ||
+            ref->join->condition->opType != hsql::Expr::SIMPLE_OP ||
+            ref->join->condition->opChar != '='){
+        DBMS::log()<<"Invalide join clause"<<endl;
+        return false;
+    }
+
+    string leftColName = ref->join->condition->expr->name;
+    Column* leftCol = leftTable->getColumn(leftColName);
+    if(leftCol == NULL){
+        DBMS::log()<<"Column '"<<leftColName<<"' does not exist"<<endl;
+        return false;
+    }
+
+    string rightColName = ref->join->condition->expr2->name;
+    Column* rightCol = rightTable->getColumn(rightColName);
+    if(rightCol == NULL){
+        DBMS::log()<<"Column '"<<rightColName<<"' does not exist"<<endl;
+        return false;
+    }
+
+    if(leftCol->type != rightCol->type){
+        DBMS::log()<<"Data type of '"<<leftColName<<" and "<<rightColName<<"' do not match"<<endl;
+        return false;
+    }
+
+    string tmpTableName = "tmp" + to_string(tables.size());
+    Table* tmpTbl = new Table(tmpTableName);
+    tmpTbl->temporary = true;
+    if(tmpTbl->createFile()){
+        vector<Column*> columns;
+        for(auto it : leftTable->getColumns()){
+            string colName = leftTableName + "." + it->name;
+            columns.push_back(it->clone());
+        }
+        for(auto it : rightTable->getColumns()){
+            string colName = rightTableName + "." + it->name;
+            columns.push_back(it->clone());
+        }
+
+        tmpTbl->setColumns(columns);
+
+        if(leftTable->join(leftCol, rightTable, rightCol, tmpTbl))
+            tables.insert(make_pair(tmpTableName, tmpTbl));
+        else{
+            delete tmpTbl;
+            return false;
+        }
+    }
+    else{
+        delete tmpTbl;
+        return false;
+    }
+
+    ref->alias = strdup(tmpTableName.c_str());
     return true;
 }
 

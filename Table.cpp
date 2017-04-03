@@ -58,7 +58,7 @@ Table::Table()
 }
 Table::~Table(){
     for(auto col : columns){
-        delete col.second;
+        delete col;
     }
 }
 
@@ -67,23 +67,27 @@ Table::Table(const std::string &name):name(name){
 }
 
 Column* Table::getColumn(const std::string& colName){
-    return columns[colName];
+    for(Column* col : columns){
+        if(col->name == colName)
+            return col;
+    }
+    return NULL;
 }
 
-void Table::setColumns(const std::map<string, Column *> &value){
+void Table::setColumns(const vector<Column *> &value){
     columns = value;
     recordSize = 0;
     trueRecordSize = 0;
     for(auto ele : columns){
-        ele.second->offset = trueRecordSize;
+        ele->offset = trueRecordSize;
 
-        recordSize += ele.second->size;
-        trueRecordSize += ele.second->trueSize;
+        recordSize += ele->size;
+        trueRecordSize += ele->trueSize;
     }
 }
 
 void Table::setPrimaryKey(const string &colName){
-    primaryKey = columns[colName];
+    primaryKey = getColumn(colName);
 }
 
 bool Table::createFile(){
@@ -95,7 +99,7 @@ bool Table::removeFile(){
     return remove(filename.c_str());
 }
 
-bool Table::insert(const hsql::InsertStatement *stmt){
+bool Table::insert(hsql::InsertStatement *stmt){
     // open table file
     ofstream os(filename, ios::out|ios::binary|ios::app);
     if(!os.is_open()){
@@ -118,8 +122,8 @@ bool Table::insert(const hsql::InsertStatement *stmt){
         //  check unknown column in statement
         if(stmt->columns != NULL){
             for(char* col_name : *stmt->columns){
-                auto it = columns.find(col_name);
-                if(it == columns.end()){
+                auto it = getColumn(col_name);
+                if(it == NULL){
                     DBMS::log()<<"Unknown column "<<col_name<<" in 'field list'"<<endl;
                     return false;
                 }
@@ -129,13 +133,12 @@ bool Table::insert(const hsql::InsertStatement *stmt){
         char* row = new char[trueRecordSize];
         char* ptr = row;
         int idx = 0;
-        for(auto it : columns){
-            Column* col = it.second;
+        for(auto col : columns){
             hsql::Expr* expr = NULL;
             // find corresponding value in statement
             if(stmt->columns != NULL){
                 for(int i = 0; i < stmt->columns->size(); i++){
-                    if(it.first == (*stmt->columns)[i]){
+                    if(col->name == (*stmt->columns)[i]){
                         expr = (*stmt->values)[i];
                         break;
                     }
@@ -215,7 +218,7 @@ bool Table::insert(const hsql::InsertStatement *stmt){
 
 
 
-bool Table::select(const hsql::SelectStatement *stmt, Table* dstTable, hsql::InsertStatement* insertStmt){
+bool Table::select(hsql::SelectStatement *stmt, Table* dstTable, hsql::InsertStatement* insertStmt){
     ifstream os(filename, ios::in|ios::binary);
 
     if(!os.is_open()){
@@ -226,19 +229,22 @@ bool Table::select(const hsql::SelectStatement *stmt, Table* dstTable, hsql::Ins
     // assemble queried columns vector
     vector<pair<string, Column*>> cols;
     if(stmt->selectList->size() == 1 && (*stmt->selectList)[0]->type == hsql::kExprStar){    // select *
-        for(auto it : columns)
-            cols.push_back(it);
+        for(auto col : columns)
+            cols.push_back(make_pair(col->name, col));
     }else{
         for(hsql::Expr* expr : *stmt->selectList){
 
             if(expr->type == hsql::kExprLiteralString || expr->type == hsql::kExprColumnRef){   // select C1,C2,...
-                auto it = columns.find(expr->name);
+                string colName = expr->name;
+                if(expr->hasTable())
+                    colName = string(expr->table) + "." + colName;
+                Column* col = getColumn(colName);
 
-                if(it == columns.end()){
+                if(col == NULL){
                     DBMS::log()<<"Column '"<<expr->name<<"' does not exist"<<endl;
                     return false;
                 }else{
-                    cols.push_back(*it);
+                    cols.push_back(make_pair(col->name, col));
                 }
             }else if(expr->type == hsql::kExprLiteralInt){
                 cols.push_back(make_pair(to_string(expr->ival), (Column*)NULL));
@@ -261,7 +267,7 @@ bool Table::select(const hsql::SelectStatement *stmt, Table* dstTable, hsql::Ins
             if(col == NULL || col->type == Column::INT )
                 DBMS::log()<<left<<setw(8)<<setfill(' ')<<it.first;
             else if(col->type == Column::CHAR)
-                DBMS::log()<<left<<setw(col->size)<<setfill(' ')<<it.first;
+                DBMS::log()<<left<<setw(col->size+2 > 8 ? col->size+2 : 8)<<setfill(' ')<<it.first;
         }
         DBMS::log()<<endl;
     }
@@ -272,11 +278,11 @@ bool Table::select(const hsql::SelectStatement *stmt, Table* dstTable, hsql::Ins
     // assemble condition columns vector
     vector<Column*> conCols;
     if(condition == Condition::NORMAL){
-        auto con = columns.find(stmt->whereClause->expr->name);
-        conCols.push_back(con->second);
+        Column* con = getColumn(stmt->whereClause->expr->name);
+        conCols.push_back(con);
         if(stmt->whereClause->expr2->type == hsql::kExprColumnRef){
-            con = columns.find(stmt->whereClause->expr2->name);
-            conCols.push_back(con->second);
+            con = getColumn(stmt->whereClause->expr2->name);
+            conCols.push_back(con);
         }
     }
 
@@ -352,6 +358,59 @@ bool Table::select(const hsql::SelectStatement *stmt, Table* dstTable, hsql::Ins
             if(!insertSuccess)  return false;
         }
     }
+    return true;
+}
+
+bool Table::join(Column *leftCol, Table *rightTable, Column *rightCol, Table *dstTable){
+    ifstream leftFile(filename, ios::in|ios::binary);
+    if(!leftFile.is_open()){
+        DBMS::log()<<"Can't open database "<<name<<endl;
+        return false;
+    }
+
+    ifstream rightFile(rightTable->getFileName(), ios::in|ios::binary);
+    if(!rightFile.is_open()){
+        DBMS::log()<<"Can't open database "<<rightTable->getName()<<endl;
+        return false;
+    }
+
+    ofstream dstFile(dstTable->getFileName(), ios::out|ios::binary|ios::app);
+    if(!dstFile.is_open()){
+        DBMS::log()<<"Can't open database "<<dstTable->getName()<<endl;
+        return false;
+    }
+
+    // loop left file on column
+    char* leftBuffer = new char[leftCol->trueSize];
+    char* rightBuffer = new char[rightCol->trueSize];
+    char* leftRecordBuffer = new char[trueRecordSize];
+    char* rightRecordBuffer = new char[rightTable->getTrueRecordSize()];
+    for(int leftIdx = 0; leftIdx < records; leftIdx++){
+        leftFile.seekg(leftIdx * trueRecordSize);
+        leftFile.read(leftRecordBuffer, trueRecordSize);
+
+        leftFile.seekg(leftIdx * trueRecordSize + leftCol->offset);
+        leftFile.read(leftBuffer, leftCol->trueSize);
+
+        for(int rightIdx = 0; rightIdx < rightTable->getRecords(); rightIdx++){
+            rightFile.seekg(rightIdx * rightTable->getTrueRecordSize() + rightCol->offset);
+            rightFile.read(rightBuffer, rightCol->trueSize);
+
+            // compare value
+            if(leftCol->type == Column::INT && *(int*)leftBuffer == *(int*)rightBuffer ||
+                    leftCol->type == Column::CHAR && strcmp(leftBuffer, rightBuffer) == 0){
+                rightFile.seekg(rightIdx * rightTable->getTrueRecordSize());
+                rightFile.read(rightRecordBuffer, rightTable->getTrueRecordSize());
+
+                dstFile.write(leftRecordBuffer, trueRecordSize);
+                dstFile.write(rightRecordBuffer, rightTable->getTrueRecordSize());
+
+                dstTable->increaseRecords();
+            }
+        }
+    }
+
+    delete leftBuffer, rightBuffer, leftRecordBuffer, rightRecordBuffer;
     return true;
 }
 }

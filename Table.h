@@ -1,6 +1,6 @@
 #ifndef TABLE_H
 #define TABLE_H
-#include <map>
+#include <vector>
 #include <string>
 #include "defines.h"
 #include "sql/statements.h"
@@ -36,27 +36,30 @@ public:
     virtual ~Table();
 
     Column* getColumn(const std::string& colName);
-    void setColumns(const std::map<std::string, Column*>& value);
+    void setColumns(const std::vector<Column*>& value);
     void setPrimaryKey(const std::string& colName);
     bool createFile();
     bool removeFile();
-    bool insert(const hsql::InsertStatement *stmt);
-    bool select(const hsql::SelectStatement *stmt, Table* dstTable = NULL, hsql::InsertStatement* insertStmt = NULL);
+    bool insert(hsql::InsertStatement *stmt);
+    bool select(hsql::SelectStatement *stmt, Table* dstTable = NULL, hsql::InsertStatement* insertStmt = NULL);
+    bool join(Column* leftCol, Table* rightTable, Column* rightCol, Table* dstTable);
 
     std::string getName(){return name;}
     std::string getFileName(){return filename;}
     const Column* getPrimaryKey(){return primaryKey;}
     int getRecords(){return records;}
     int getRecordSize(){return recordSize;}
+    int getTrueRecordSize(){return trueRecordSize;}
     int getTotalSize(){return records*recordSize;}
-    const std::map<std::string, Column*>& getColumns(){return columns;}
+    const std::vector<Column*>& getColumns(){return columns;}
     void setRecords(int count){records = count;}
+    void increaseRecords(){records++;}
 
     bool temporary = false;
 private:
 
     std::string name;
-    std::map<std::string, Column*> columns;
+    std::vector<Column*> columns;
     std::string filename;
     Column* primaryKey = NULL;
 

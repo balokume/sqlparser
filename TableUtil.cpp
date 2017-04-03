@@ -23,12 +23,12 @@ void TableUtil::printColValue(ifstream& os, Column *col){
     if(col->type == Column::INT)
         DBMS::log()<<left<<setw(8)<<setfill(' ')<<*(int*)bytes;
     else{
-        DBMS::log()<<left<<setw(col->size)<<setfill(' ')<<bytes;
+        DBMS::log()<<left<<setw(col->size+2 > 8 ? col->size+2 : 8)<<setfill(' ')<<bytes;
     }
     delete bytes;
 }
 
-Condition TableUtil::checkWhere(hsql::Expr *whereClause, const map<string, Column*>& columns){
+Condition TableUtil::checkWhere(hsql::Expr *whereClause, const vector<Column*>& columns){
 
     if(whereClause->type != hsql::kExprOperator ||
             whereClause->opType != hsql::Expr::SIMPLE_OP ||
@@ -84,23 +84,26 @@ Condition TableUtil::checkWhere(hsql::Expr *whereClause, const map<string, Colum
         return Condition::INVALID;
 }
 
-bool TableUtil::isColumnExist(const hsql::Expr *expr, const std::map<string, Column *> &columns){
-    auto it = columns.find(expr->expr->name);
-    if(it == columns.end()){
+
+
+bool TableUtil::isColumnExist(const hsql::Expr *expr, const std::vector<Column *> &columns){
+
+    auto it = getColumn(columns, expr->expr->name);
+    if(it == NULL){
         DBMS::log()<<"Columns '"<<expr->expr->name<<"' does not exist"<<endl;
         return false;
     }
 
-    if(it->second->type == Column::CHAR && expr->expr2->type == hsql::kExprLiteralString ||
-            it->second->type == Column::INT && expr->expr2->type == hsql::kExprLiteralInt){
+    if(it->type == Column::CHAR && expr->expr2->type == hsql::kExprLiteralString ||
+            it->type == Column::INT && expr->expr2->type == hsql::kExprLiteralInt){
             return true;
     }else if(expr->expr2->type == hsql::kExprColumnRef){
-        auto it2 = columns.find(expr->expr2->name);
-        if(it2 == columns.end()){
+        auto it2 = getColumn(columns, expr->expr2->name);
+        if(it2 == NULL){
             DBMS::log()<<"Columns '"<<expr->expr2->name<<"' does not exist"<<endl;
             return false;
         }
-        if(it->second->type != it2->second->type){
+        if(it->type != it2->type){
             DBMS::log()<<"Data type mismatch"<<endl;
             return false;
         }
@@ -135,5 +138,13 @@ bool TableUtil::checkColValueWithCondition(ifstream& os,  int offset, vector<Col
     }
     delete bytes;
     return equal;
+}
+
+Column* TableUtil::getColumn(const std::vector<Column*>& columns, const std::string& colName){
+    for(Column* col : columns){
+        if(col->name == colName)
+            return col;
+    }
+    return NULL;
 }
 }
