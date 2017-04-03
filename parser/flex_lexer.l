@@ -44,6 +44,7 @@
 
 
 %s COMMENT
+%x C_COMMENT
 
 /***************************
  ** Section 3: Rules
@@ -53,6 +54,11 @@
 --				BEGIN(COMMENT);
 <COMMENT>[^\n]*	/* skipping comment content until a end of line is read */;
 <COMMENT>\n 	BEGIN(INITIAL);
+
+"/*"            { BEGIN(C_COMMENT); }
+<C_COMMENT>"*/" { BEGIN(INITIAL); }
+<C_COMMENT>\n   { }
+<C_COMMENT>.    { }
 
 [ \t\n]+	/* skip whitespace */;
 

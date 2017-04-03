@@ -230,6 +230,7 @@ void hsql_free (void * ,yyscan_t yyscanner );
 #ifdef YY_HEADER_EXPORT_START_CONDITIONS
 #define INITIAL 0
 #define COMMENT 1
+#define C_COMMENT 2
 
 #endif
 
@@ -352,9 +353,9 @@ extern int hsql_lex \
 #undef YY_DECL
 #endif
 
-#line 216 "flex_lexer.l"
+#line 222 "flex_lexer.l"
 
 
-#line 359 "flex_lexer.h"
+#line 360 "flex_lexer.h"
 #undef hsql_IN_HEADER
 #endif /* hsql_HEADER_H */
