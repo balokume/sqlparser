@@ -19,6 +19,7 @@ public:
     static bool checkColValueWithCondition(std::ifstream& os, int offset, std::vector<Column*> cols, hsql::Expr* whereClause);
 
     static Column* getColumn(const std::vector<Column*>& columns, const std::string& colName);
+    static Column* getColumn(const std::vector<Column*>& columns, hsql::Expr* expr);
 };
 }
 #endif // TABLEUTIL_H

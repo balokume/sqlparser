@@ -47,9 +47,21 @@ void Column::fromString(const string &str){
 }
 
 Column* Column::clone(){
-    Column* col = new Column();
-    memcpy(col, this, sizeof(Column));
+    Column* col = new Column(name, type, size);
+    col->tableName = tableName;
+    col->offset = offset;
+    col->trueSize = trueSize;
+
     return col;
+}
+
+bool Column::compareName(hsql::Expr *expr){
+    if(!expr->hasTable() && expr->name == name)
+        return true;
+    else if(expr->hasTable() && expr->table == tableName && expr->name == name)
+        return true;
+    else
+        return false;
 }
 
 Table::Table()
@@ -67,19 +79,21 @@ Table::Table(const std::string &name):name(name){
 }
 
 Column* Table::getColumn(const std::string& colName){
-    for(Column* col : columns){
-        if(col->name == colName)
-            return col;
-    }
-    return NULL;
+    return TableUtil::getColumn(columns, colName);
 }
 
-void Table::setColumns(const vector<Column *> &value){
+Column* Table::getColumn(   hsql::Expr *expr){
+    return TableUtil::getColumn(columns, expr);
+}
+
+void Table::setColumns(const vector<Column *> &value, bool changeTableName){
     columns = value;
     recordSize = 0;
     trueRecordSize = 0;
     for(auto ele : columns){
         ele->offset = trueRecordSize;
+        if(changeTableName)
+            ele->tableName = name;
 
         recordSize += ele->size;
         trueRecordSize += ele->trueSize;
@@ -238,10 +252,10 @@ bool Table::select(hsql::SelectStatement *stmt, Table* dstTable, hsql::InsertSta
                 string colName = expr->name;
                 if(expr->hasTable())
                     colName = string(expr->table) + "." + colName;
-                Column* col = getColumn(colName);
+                Column* col = getColumn(expr);
 
                 if(col == NULL){
-                    DBMS::log()<<"Column '"<<expr->name<<"' does not exist"<<endl;
+                    DBMS::log()<<"Column '"<<colName<<"' does not exist"<<endl;
                     return false;
                 }else{
                     cols.push_back(make_pair(col->name, col));
@@ -278,7 +292,7 @@ bool Table::select(hsql::SelectStatement *stmt, Table* dstTable, hsql::InsertSta
     // assemble condition columns vector
     vector<Column*> conCols;
     if(condition == Condition::NORMAL){
-        Column* con = getColumn(stmt->whereClause->expr->name);
+        Column* con = getColumn(stmt->whereClause->expr);
         conCols.push_back(con);
         if(stmt->whereClause->expr2->type == hsql::kExprColumnRef){
             con = getColumn(stmt->whereClause->expr2->name);

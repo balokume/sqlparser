@@ -147,4 +147,12 @@ Column* TableUtil::getColumn(const std::vector<Column*>& columns, const std::str
     }
     return NULL;
 }
+
+Column* TableUtil::getColumn(const std::vector<Column*>& columns,   hsql::Expr* expr){
+    for(Column* col : columns){
+        if(col->compareName(expr))
+            return col;
+    }
+    return NULL;
+}
 }

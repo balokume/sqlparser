@@ -267,16 +267,15 @@ bool Schema::createRefTable(hsql::TableRef *ref){
 }
 
 bool Schema::createRefTableFromSelect(hsql::TableRef *ref){
-    DBMS::log()<<ref->alias<<endl;
     string tmpTableName = ref->alias;
-    string fromTableName = ref->select->fromTable->getName();
-    DBMS::log()<<fromTableName<<endl;
 
     if(ref->select->fromTable->type != hsql::kTableName){
         if(!createRefTable(ref->select->fromTable))
             return false;
     }else{
     }
+
+    string fromTableName = ref->select->fromTable->getName();
 
     auto it = tables.find(tmpTableName);
     if(it != tables.end()){
@@ -356,14 +355,22 @@ bool Schema::createRefTableFromJoin(hsql::TableRef *ref){
     }
 
     string leftColName = ref->join->condition->expr->name;
-    Column* leftCol = leftTable->getColumn(leftColName);
+    if(ref->join->condition->expr->hasTable())
+        leftColName = string(ref->join->condition->expr->table) + "." + leftColName;
+    Column* leftCol = leftTable->getColumn(ref->join->condition->expr);
+    if(leftCol == NULL)
+        leftCol = leftTable->getColumn(ref->join->condition->expr2);
     if(leftCol == NULL){
         DBMS::log()<<"Column '"<<leftColName<<"' does not exist"<<endl;
         return false;
     }
 
     string rightColName = ref->join->condition->expr2->name;
-    Column* rightCol = rightTable->getColumn(rightColName);
+    if(ref->join->condition->expr2->hasTable())
+        rightColName = string(ref->join->condition->expr2->table) + "." + rightColName;
+    Column* rightCol = rightTable->getColumn(ref->join->condition->expr2);
+    if(rightCol == NULL)
+        rightCol = rightTable->getColumn(ref->join->condition->expr);
     if(rightCol == NULL){
         DBMS::log()<<"Column '"<<rightColName<<"' does not exist"<<endl;
         return false;
@@ -380,15 +387,13 @@ bool Schema::createRefTableFromJoin(hsql::TableRef *ref){
     if(tmpTbl->createFile()){
         vector<Column*> columns;
         for(auto it : leftTable->getColumns()){
-            string colName = leftTableName + "." + it->name;
             columns.push_back(it->clone());
         }
         for(auto it : rightTable->getColumns()){
-            string colName = rightTableName + "." + it->name;
             columns.push_back(it->clone());
         }
 
-        tmpTbl->setColumns(columns);
+        tmpTbl->setColumns(columns, false);
 
         if(leftTable->join(leftCol, rightTable, rightCol, tmpTbl))
             tables.insert(make_pair(tmpTableName, tmpTbl));

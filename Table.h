@@ -25,7 +25,10 @@ struct Column{
     int trueSize;
     DataType type;
     int offset = 0;
+    std::string tableName;
+
     Column* clone();
+    bool compareName(hsql::Expr*);
 };
 
 class Table
@@ -36,7 +39,8 @@ public:
     virtual ~Table();
 
     Column* getColumn(const std::string& colName);
-    void setColumns(const std::vector<Column*>& value);
+    Column* getColumn(hsql::Expr* expr);
+    void setColumns(const std::vector<Column*>& value, bool changeTableName = true);
     void setPrimaryKey(const std::string& colName);
     bool createFile();
     bool removeFile();

@@ -24,8 +24,8 @@ void DBMS::setMode(RUN_MODE mode){
     this->mode = mode;
 
     if(mode == RUN_MODE::SCRIPT){
-//        os = new ofstream("output.txt");
-        os = &std::cout;
+        os = new ofstream("output.txt");
+//        os = &std::cout;
     }else{
         os = &std::cout;
     }
@@ -51,7 +51,7 @@ bool DBMS::processQuery(const string &query){
             }
 
             // Print a statement summary.
-            //hsql::printStatementInfo(result->getStatement(i));
+//            hsql::printStatementInfo(result->getStatement(i));
         }
         delete result;
         return false;
