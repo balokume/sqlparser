@@ -441,7 +441,16 @@ void Schema::executeShow(hsql::ShowStatement *stmt){
 }
 
 void Schema::executeDrop(hsql::DropStatement *stmt){
-
+    string tableName = stmt->name;
+    auto it = tables.find(tableName);
+    if(it == tables.end()){
+        DBMS::log()<<"Table "<<tableName<<" does not exist"<<endl;
+        return;
+    }
+    it->second->removeFile();
+    delete it->second;
+    tables.erase(it);
+    DBMS::log()<<"Table "<<tableName<<" is removed"<<endl;
 }
 
 }
