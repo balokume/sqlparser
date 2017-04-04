@@ -115,7 +115,7 @@ bool Table::removeFile(){
 
 bool Table::insert(hsql::InsertStatement *stmt){
     // open table file
-    ofstream os(filename, ios::out|ios::binary|ios::app);
+    fstream os(filename, ios::in|ios::out|ios::binary|ios::app);
     if(!os.is_open()){
         DBMS::log()<<"Can't open database "<<name<<endl;
         return false;
@@ -144,85 +144,100 @@ bool Table::insert(hsql::InsertStatement *stmt){
             }
         }
 
-        char* row = new char[trueRecordSize];
-        char* ptr = row;
-        int idx = 0;
-        for(auto col : columns){
+        // check type consistency and assign expressions
+        vector<hsql::Expr*> exprs(columns.size());
+        for(int i = 0; i < columns.size(); i++){
             hsql::Expr* expr = NULL;
+            Column* col = columns[i];
             // find corresponding value in statement
             if(stmt->columns != NULL){
-                for(int i = 0; i < stmt->columns->size(); i++){
-                    if(col->name == (*stmt->columns)[i]){
-                        expr = (*stmt->values)[i];
+                for(int j = 0; j < stmt->columns->size(); j++){
+                    if(col->name == (*stmt->columns)[j]){
+                        expr = (*stmt->values)[j];
                         break;
                     }
                 }
-
             }else{
-                if(idx < stmt->values->size())
-                    expr = (*stmt->values)[idx];
-                else
-                    expr = NULL;
+                if(i < stmt->values->size())
+                    expr = (*stmt->values)[i];
             }
 
-            if(expr != NULL){
-                if(col->type == Column::DataType::CHAR){
-                    if(expr->type == hsql::kExprLiteralString){
-                        // check size
-                        if(strlen(expr->name) > col->size){
-                            DBMS::log()<<"Data too long for column '"<<col->name<<"'"<<endl;
-                            delete row;
-                            return false;
-                        }
-                        memcpy(ptr, expr->name, strlen(expr->name)+1);
-                        ptr += col->trueSize;
-                    }else if(expr->type == hsql::kExprLiteralInt){
-                        const char* str = to_string(expr->ival).c_str();
-                        // check size
-                        if(strlen(str) > col->size){
-                            DBMS::log()<<"Data too long for column '"<<col->name<<"'"<<endl;
-                            delete row;
-                            return false;
-                        }
-                        memcpy(ptr, str, strlen(str)+1);
-                        ptr += col->trueSize;
-                    }else{
-                        DBMS::log()<<"Unexpeced data type"<<endl;
-                        delete row;
+            exprs[i]= expr;
+
+            if(expr == NULL)
+                continue;
+
+            if(col->type == Column::DataType::CHAR){    // column is CHAR
+                if(expr->type == hsql::kExprLiteralString){
+                    // check size
+                    if(strlen(expr->name) > col->size){
+                        DBMS::log()<<"Data too long for column '"<<col->name<<"'"<<endl;
                         return false;
                     }
-                }else{
-                    // check type consistency
-                    if(expr->type == hsql::kExprLiteralString){
-                        DBMS::log()<<"Invalid integer value: '"<<expr->name<<"' for column '"<<col->name<<"'"<<endl;
-                        delete row;
-                        return false;
-                    }else if(expr->type == hsql::kExprLiteralInt){
-                        memcpy(ptr, &expr->ival, INT_SIZE);
-                        ptr += col->trueSize;
-                    }else{
-                        DBMS::log()<<"Unexpeced data type"<<endl;
-                        delete row;
+                }else if(expr->type == hsql::kExprLiteralInt){
+                    const char* str = to_string(expr->ival).c_str();
+                    // check size
+                    if(strlen(str) > col->size){
+                        DBMS::log()<<"Data too long for column '"<<col->name<<"'"<<endl;
                         return false;
                     }
-
-
                 }
-            }else{  // not specified in statement, assign NULL
-                if(col->type == Column::DataType::CHAR){
-                    ptr[0] = '\0';
-                    ptr += col->trueSize;
-                }else{
-                    memset(ptr, 0, col->trueSize);
-                    ptr += col->trueSize;
+            }else{  // column is INT
+                // check type consistency
+                if(expr->type == hsql::kExprLiteralString){
+                    DBMS::log()<<"Invalid integer value: '"<<expr->name<<"' for column '"<<col->name<<"'"<<endl;
+                    return false;
                 }
             }
-
-            idx++;
         }
 
-        os.write(row, trueRecordSize);
-        delete row;
+        // check primary ke violation
+        for(int i = 0; i < columns.size(); i++){
+            if(columns[i] != primaryKey || exprs[i] == NULL)
+                continue;
+            // check duplicate
+            char* preValue = new char[primaryKey->trueSize];
+            for(int j = 0; j < records; j++){
+                os.seekg(j*trueRecordSize + primaryKey->offset);
+                os.read(preValue, primaryKey->trueSize);
+
+                if(primaryKey->type == Column::INT && *(int*)preValue == exprs[i]->ival){
+                    DBMS::log()<<"Duplicate value "<<*(int*)preValue<<" found for primary key "<<primaryKey->name<<endl;
+                    return false;
+                }
+                else if(primaryKey->type == Column::CHAR && strcmp(preValue, exprs[i]->name) == 0){
+                    DBMS::log()<<"Duplicate value "<<preValue<<" found for primary key "<<primaryKey->name<<endl;
+                    return false;
+                }
+            }
+        }
+
+        // do insert
+        char* record = new char[trueRecordSize];
+        char* ptrCol = record;
+        for(int i = 0; i < columns.size(); i++){
+            hsql::Expr* expr = exprs[i];
+            Column* col = columns[i];
+            if(expr != NULL){
+                if(col->type == Column::CHAR){
+                    if(expr->type == hsql::kExprLiteralString){
+                        memcpy(ptrCol, expr->name, strlen(expr->name)+1);
+                    }else{
+                        const char* str = to_string(expr->ival).c_str();
+                        memcpy(ptrCol, str, strlen(str)+1);
+                    }
+                }else{
+                    memcpy(ptrCol, &expr->ival, INT_SIZE);
+                }
+
+            }else{
+                memset(ptrCol, 0, col->trueSize);
+            }
+            ptrCol += col->trueSize;
+        }
+
+        os.write(record, trueRecordSize);
+        delete record;
         records++;
     }else{  // insert by selection
     }
