@@ -193,8 +193,10 @@ void Schema::executeInsert(hsql::InsertStatement *stmt){
         }else{
             if(stmt->select->fromTable->type == hsql::kTableName){  // insert from signle select
 
-            }else if(stmt->select->fromTable->type == hsql::kTableSelect){  // insert from nested select
-                createRefTable(stmt->select->fromTable);
+            }else if(stmt->select->fromTable->type == hsql::kTableSelect ||
+                     stmt->select->fromTable->type == hsql::kTableJoin){  // insert from nested select
+                if(!createRefTable(stmt->select->fromTable))
+                    return;
             }
 
             string fromTableName = stmt->select->fromTable->getName();
@@ -250,7 +252,7 @@ void Schema::executeSelect(hsql::SelectStatement *stmt){
         }
     }else{
         if(createRefTable(stmt->fromTable)){
-            Table* fromTbl = getTable(stmt->fromTable->alias);
+            Table* fromTbl = getTable(stmt->fromTable->getName());
             if(fromTbl != NULL)
                 fromTbl->select(stmt);
         }
@@ -267,6 +269,11 @@ bool Schema::createRefTable(hsql::TableRef *ref){
 }
 
 bool Schema::createRefTableFromSelect(hsql::TableRef *ref){
+    if(ref->alias == NULL){
+        DBMS::log()<<"Subquery in FROM must have an alias"<<endl;
+        return false;
+    }
+
     string tmpTableName = ref->alias;
 
     if(ref->select->fromTable->type != hsql::kTableName){
