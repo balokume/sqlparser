@@ -20,6 +20,8 @@ public:
 
     static Column* getColumn(const std::vector<Column*>& columns, const std::string& colName);
     static Column* getColumn(const std::vector<Column*>& columns, hsql::Expr* expr);
+
+    static bool valueEqual(Column* col, char* val1, char* val2);
 };
 }
 #endif // TABLEUTIL_H

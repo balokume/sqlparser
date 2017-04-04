@@ -301,6 +301,26 @@ bool Table::select(hsql::SelectStatement *stmt, Table* dstTable, hsql::InsertSta
     }
 
     bool hasInsertStatement = insertStmt != NULL;
+
+    // create buffers for checking duplicates
+    vector<char*> curValues(cols.size());
+    vector<char*> preValues(cols.size());
+    auto ptrCurValue = curValues.begin(), ptrPreValue = preValues.begin();
+    for(auto it:cols){
+        Column* col = it.second;
+        if(col == NULL){
+            *ptrCurValue = NULL;
+            *ptrPreValue = NULL;
+        }else{
+            *ptrCurValue = new char[col->trueSize];
+            *ptrPreValue = new char[col->trueSize];
+        }
+        ptrCurValue++;
+        ptrPreValue++;
+    }
+
+    vector<int> validRecordIdx;
+
     // print records
     for(int i = 0; i < records; i++){
         // check condition
@@ -309,7 +329,57 @@ bool Table::select(hsql::SelectStatement *stmt, Table* dstTable, hsql::InsertSta
                 continue;
         }
 
-        if(dstTable == NULL){
+        if(dstTable == NULL){   // print result
+            // check duplicate
+            bool hasDuplicate = false;
+            // set values for current record
+            ptrCurValue = curValues.begin();
+            for(auto it:cols){
+                Column* col = it.second;
+                if(col == NULL){
+                    ptrCurValue++;
+                    continue;
+                }
+
+                os.seekg(i*trueRecordSize + col->offset);
+                os.read(*ptrCurValue, col->trueSize);
+                ptrCurValue++;
+            }
+
+            // check previous records
+            for(int j : validRecordIdx){
+                bool equal = true;
+                ptrCurValue = curValues.begin();
+                ptrPreValue = preValues.begin();
+                for(auto it:cols){
+                    Column* col = it.second;
+                    if(col == NULL){
+                        ptrCurValue++;
+                        ptrPreValue++;
+                        continue;
+                    }
+
+                    os.seekg(j*trueRecordSize + col->offset);
+                    os.read(*ptrPreValue, col->trueSize);
+                    if(!TableUtil::valueEqual(col, *ptrCurValue, *ptrPreValue)){
+                        equal = false;
+                        break;
+                    }
+                    ptrCurValue++;
+                    ptrPreValue++;
+                }
+
+                if(equal){
+                    hasDuplicate = true;
+                    break;
+                }
+            }
+
+            if(hasDuplicate)
+                continue;
+
+            validRecordIdx.push_back(i);
+
             for(auto it:cols){
                 Column* col = it.second;
                 if(col != NULL){
@@ -321,7 +391,7 @@ bool Table::select(hsql::SelectStatement *stmt, Table* dstTable, hsql::InsertSta
                 }
             }
             DBMS::log()<<endl;
-        }else{
+        }else{  // insert into table
             if(!hasInsertStatement){
                 insertStmt = new hsql::InsertStatement(hsql::InsertStatement::kInsertValues);
                 insertStmt->tableName = strdup(dstTable->getName().c_str());
@@ -369,8 +439,27 @@ bool Table::select(hsql::SelectStatement *stmt, Table* dstTable, hsql::InsertSta
             else
                 delete insertStmt;
 
-            if(!insertSuccess)  return false;
+            if(!insertSuccess){
+                // delete buffer
+                for(ptrCurValue = curValues.begin(), ptrPreValue = preValues.begin();
+                    ptrCurValue != curValues.end(); ptrCurValue++,ptrPreValue++){
+                    if(*ptrCurValue != NULL)
+                        delete *ptrCurValue;
+                    if(*ptrPreValue != NULL)
+                        delete *ptrPreValue;
+                }
+                return false;
+            }
         }
+    }
+
+    // delete buffer
+    for(ptrCurValue = curValues.begin(), ptrPreValue = preValues.begin();
+        ptrCurValue != curValues.end(); ptrCurValue++,ptrPreValue++){
+        if(*ptrCurValue != NULL)
+            delete *ptrCurValue;
+        if(*ptrPreValue != NULL)
+            delete *ptrPreValue;
     }
     return true;
 }

@@ -155,4 +155,12 @@ Column* TableUtil::getColumn(const std::vector<Column*>& columns,   hsql::Expr* 
     }
     return NULL;
 }
+
+bool TableUtil::valueEqual(Column *col, char *val1, char *val2){
+    if(col->type == Column::INT){
+        return *(int*)val1 == *(int*)val2;
+    }else{
+        return strcmp(val1, val2) == 0;
+    }
+}
 }
