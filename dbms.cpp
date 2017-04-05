@@ -14,10 +14,8 @@ DBMS::DBMS() : mode(RUN_MODE::INTERACTIVE)
 DBMS::~DBMS(){
     delete schema;
 
-    if(mode == RUN_MODE::SCRIPT){
-        ((ofstream*)os)->close();
+    if(dynamic_cast<ofstream*>(os))
         delete os;
-    }
 }
 
 void DBMS::setMode(RUN_MODE mode){

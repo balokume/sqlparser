@@ -43,7 +43,7 @@
 /* %option nodefault */
 
 
-%s COMMENT
+
 %x C_COMMENT
 
 /***************************
@@ -51,9 +51,7 @@
  ***************************/
 %%
 
---				BEGIN(COMMENT);
-<COMMENT>[^\n]*	/* skipping comment content until a end of line is read */;
-<COMMENT>\n 	BEGIN(INITIAL);
+
 
 "/*"            { BEGIN(C_COMMENT); }
 <C_COMMENT>"*/" { BEGIN(INITIAL); }

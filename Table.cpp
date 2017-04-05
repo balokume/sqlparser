@@ -191,7 +191,7 @@ bool Table::insert(hsql::InsertStatement *stmt){
             }
         }
 
-        // check primary ke violation
+        // check primary key violation
         for(int i = 0; i < columns.size(); i++){
             if(columns[i] != primaryKey || exprs[i] == NULL)
                 continue;
@@ -202,11 +202,13 @@ bool Table::insert(hsql::InsertStatement *stmt){
                 os.read(preValue, primaryKey->trueSize);
 
                 if(primaryKey->type == Column::INT && *(int*)preValue == exprs[i]->ival){
-                    DBMS::log()<<"Duplicate value "<<*(int*)preValue<<" found for primary key "<<primaryKey->name<<endl;
+                    if(!silent)
+                        DBMS::log()<<"Duplicate value "<<*(int*)preValue<<" found for primary key "<<primaryKey->name<<endl;
                     return false;
                 }
                 else if(primaryKey->type == Column::CHAR && strcmp(preValue, exprs[i]->name) == 0){
-                    DBMS::log()<<"Duplicate value "<<preValue<<" found for primary key "<<primaryKey->name<<endl;
+                    if(!silent)
+                        DBMS::log()<<"Duplicate value "<<preValue<<" found for primary key "<<primaryKey->name<<endl;
                     return false;
                 }
             }
@@ -446,7 +448,9 @@ bool Table::select(hsql::SelectStatement *stmt, Table* dstTable, hsql::InsertSta
                 }
             }
 
+            dstTable->silent = true;
             bool insertSuccess = dstTable->insert(insertStmt);
+            dstTable->silent = false;
             if(hasInsertStatement){
                 delete insertStmt->values;
                 insertStmt->values = NULL;
@@ -454,17 +458,17 @@ bool Table::select(hsql::SelectStatement *stmt, Table* dstTable, hsql::InsertSta
             else
                 delete insertStmt;
 
-            if(!insertSuccess){
-                // delete buffer
-                for(ptrCurValue = curValues.begin(), ptrPreValue = preValues.begin();
-                    ptrCurValue != curValues.end(); ptrCurValue++,ptrPreValue++){
-                    if(*ptrCurValue != NULL)
-                        delete *ptrCurValue;
-                    if(*ptrPreValue != NULL)
-                        delete *ptrPreValue;
-                }
-                return false;
-            }
+//            if(!insertSuccess){
+//                // delete buffer
+//                for(ptrCurValue = curValues.begin(), ptrPreValue = preValues.begin();
+//                    ptrCurValue != curValues.end(); ptrCurValue++,ptrPreValue++){
+//                    if(*ptrCurValue != NULL)
+//                        delete *ptrCurValue;
+//                    if(*ptrPreValue != NULL)
+//                        delete *ptrPreValue;
+//                }
+//                return false;
+//            }
         }
     }
 

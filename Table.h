@@ -60,6 +60,7 @@ public:
     void increaseRecords(){records++;}
 
     bool temporary = false;
+    bool silent = false;
 private:
 
     std::string name;
@@ -70,7 +71,6 @@ private:
     int records = 0;
     int recordSize = 0;
     int trueRecordSize = 0;
-
 };
 
 enum Condition{
