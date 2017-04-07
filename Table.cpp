@@ -56,9 +56,9 @@ Column* Column::clone(){
 }
 
 bool Column::compareName(hsql::Expr *expr){
-    if(!expr->hasTable() && expr->name == name)
+    if(!expr->hasTable() && TableUtil::compareString(name, expr->name))
         return true;
-    else if(expr->hasTable() && expr->table == tableName && expr->name == name)
+    else if(expr->hasTable() && TableUtil::compareString(tableName, expr->table) && TableUtil::compareString(name, expr->name))
         return true;
     else
         return false;

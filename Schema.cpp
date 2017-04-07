@@ -3,6 +3,7 @@
 #include <sstream>
 #include <iterator>
 #include <cstring>
+#include "TableUtil.h"
 using namespace std;
 
 namespace dbms{
@@ -110,11 +111,11 @@ void Schema::saveToFile(){
 }
 
 Table* Schema::getTable(const string &tableName){
-    auto it = tables.find(tableName);
-    if(it == tables.end())
-        return NULL;
-    else
-        return it->second;
+    for(auto it : tables){
+        if(TableUtil::compareString(tableName, it.first))
+            return it.second;
+    }
+    return NULL;
 }
 
 void Schema::executeStatement(hsql::SQLStatement *stmt){
@@ -140,8 +141,8 @@ void Schema::executeStatement(hsql::SQLStatement *stmt){
 }
 
 void Schema::executeCreate(hsql::CreateStatement *stmt){
-    auto it = tables.find(stmt->tableName);
-    if(it != tables.end()){
+    Table* table = getTable(stmt->tableName);
+    if(table != NULL){
         DBMS::log()<<"Table "<<stmt->tableName<<" already exists"<<endl;
         return;
     }
@@ -183,12 +184,12 @@ void Schema::executeCreate(hsql::CreateStatement *stmt){
 }
 
 void Schema::executeInsert(hsql::InsertStatement *stmt){
-    auto it = tables.find(stmt->tableName);
-    if(it == tables.end()){
+    Table* toTable = getTable(stmt->tableName);
+    if(toTable == NULL){
         DBMS::log()<<"Table "<<stmt->tableName<<" does not exist"<<endl;
     }else{
         if(stmt->type == hsql::InsertStatement::kInsertValues){ // insert from values
-            if(it->second->insert(stmt))
+            if(toTable->insert(stmt))
                 DBMS::log()<<"Insert success"<<endl;
         }else{
             if(stmt->select->fromTable->type == hsql::kTableName){  // insert from signle select
@@ -200,8 +201,8 @@ void Schema::executeInsert(hsql::InsertStatement *stmt){
             }
 
             string fromTableName = stmt->select->fromTable->getName();
-            auto fromTbl = tables.find(fromTableName);
-            if(fromTbl == tables.end()){
+            Table* fromTbl = getTable(fromTableName);
+            if(fromTbl == NULL){
                 DBMS::log()<<"Table "<<fromTableName<<" does not exist"<<endl;
                 return;
             }
@@ -209,13 +210,13 @@ void Schema::executeInsert(hsql::InsertStatement *stmt){
             // compare column count
             int numFromCols, numToCols;
             if(stmt->select->selectList->size() == 1 && (*stmt->select->selectList)[0]->type == hsql::kExprStar){
-                numFromCols = fromTbl->second->getColumns().size();
+                numFromCols = fromTbl->getColumns().size();
             }else{
                 numFromCols = stmt->select->selectList->size();
             }
 
             if(stmt->columns == NULL){
-                numToCols = it->second->getColumns().size();
+                numToCols = toTable->getColumns().size();
                 if(numFromCols > numToCols){
                     DBMS::log()<<"INSERT has more expressions than target columns"<<endl;
                     return;
@@ -234,7 +235,7 @@ void Schema::executeInsert(hsql::InsertStatement *stmt){
 
             // insert from selection
             stmt->type = hsql::InsertStatement::kInsertValues;
-            bool success = fromTbl->second->select(stmt->select, it->second, stmt);
+            bool success = fromTbl->select(stmt->select, toTable, stmt);
             stmt->type = hsql::InsertStatement::kInsertSelect;
             if(success)
                 DBMS::log()<<"Insert success"<<endl;
@@ -244,11 +245,11 @@ void Schema::executeInsert(hsql::InsertStatement *stmt){
 
 void Schema::executeSelect(hsql::SelectStatement *stmt){
     if(stmt->fromTable->type == hsql::kTableName){
-        auto it = tables.find(stmt->fromTable->name);
-        if(it == tables.end()){
+        Table* table = getTable(stmt->fromTable->name);
+        if(table == NULL){
             DBMS::log()<<"Table "<<stmt->fromTable->name<<" does not exist"<<endl;
         }else{
-            it->second->select(stmt);
+            table->select(stmt);
         }
     }else{
         if(createRefTable(stmt->fromTable)){
@@ -284,14 +285,14 @@ bool Schema::createRefTableFromSelect(hsql::TableRef *ref){
 
     string fromTableName = ref->select->fromTable->getName();
 
-    auto it = tables.find(tmpTableName);
-    if(it != tables.end()){
+    Table* table = getTable(tmpTableName);
+    if(table != NULL){
         DBMS::log()<<"Table "<<tmpTableName<<" already exists"<<endl;
         return false;
     }
 
-    auto fromTbl = tables.find(fromTableName);
-    if(fromTbl == tables.end()){
+    Table* fromTbl = getTable(fromTableName);
+    if(fromTbl == NULL){
         DBMS::log()<<"Table "<<fromTableName<<" does not exist"<<endl;
         return false;
     }
@@ -301,12 +302,12 @@ bool Schema::createRefTableFromSelect(hsql::TableRef *ref){
     if(tmpTbl->createFile()){
         vector<Column*> columns;
         if(ref->select->selectList->size() == 1 && (*ref->select->selectList)[0]->type == hsql::kExprStar){    // select *
-            for(auto col : fromTbl->second->getColumns()){
+            for(auto col : fromTbl->getColumns()){
                 columns.push_back(col->clone());
             }
         }else{
             for (hsql::Expr* expr : *(ref->select->selectList)) {
-                Column* col = fromTbl->second->getColumn(expr->name);
+                Column* col = fromTbl->getColumn(expr->name);
                 if(col == NULL){
                     DBMS::log()<<"Column '"<<expr->name<<"' does not exist"<<endl;
                     delete tmpTbl;
@@ -320,7 +321,7 @@ bool Schema::createRefTableFromSelect(hsql::TableRef *ref){
         tmpTbl->setColumns(columns);
 
 
-        if(fromTbl->second->select(ref->select, tmpTbl))
+        if(fromTbl->select(ref->select, tmpTbl))
             tables.insert(pair<string, Table*>(tmpTableName, tmpTbl));
         else{
             delete tmpTbl;
@@ -449,15 +450,16 @@ void Schema::executeShow(hsql::ShowStatement *stmt){
 
 void Schema::executeDrop(hsql::DropStatement *stmt){
     string tableName = stmt->name;
-    auto it = tables.find(tableName);
-    if(it == tables.end()){
-        DBMS::log()<<"Table "<<tableName<<" does not exist"<<endl;
-        return;
+    for(auto it = tables.cbegin(); it != tables.cend();it++){
+        if(TableUtil::compareString(tableName, it->first)){
+            it->second->removeFile();
+            delete it->second;
+            tables.erase(it);
+            DBMS::log()<<"Table "<<tableName<<" is removed"<<endl;
+            return;
+        }
     }
-    it->second->removeFile();
-    delete it->second;
-    tables.erase(it);
-    DBMS::log()<<"Table "<<tableName<<" is removed"<<endl;
+    DBMS::log()<<"Table "<<tableName<<" does not exist"<<endl;
 }
 
 }

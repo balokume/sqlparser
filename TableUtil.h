@@ -22,6 +22,10 @@ public:
     static Column* getColumn(const std::vector<Column*>& columns, hsql::Expr* expr);
 
     static bool valueEqual(Column* col, char* val1, char* val2);
+
+    static bool compareString(const std::string& str1, const std::string& str2);
+    static bool compareString(const std::string& str1, const char* str2);
+    static bool compareString(const char* str1, const char* str2);
 };
 }
 #endif // TABLEUTIL_H

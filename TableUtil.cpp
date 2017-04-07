@@ -2,6 +2,7 @@
 #include <iomanip>
 #include "dbms.h"
 #include <cstring>
+#include <locale>
 
 using namespace std;
 
@@ -142,7 +143,7 @@ bool TableUtil::checkColValueWithCondition(ifstream& os,  int offset, vector<Col
 
 Column* TableUtil::getColumn(const std::vector<Column*>& columns, const std::string& colName){
     for(Column* col : columns){
-        if(col->name == colName)
+        if(compareString(colName, col->name))
             return col;
     }
     return NULL;
@@ -162,5 +163,30 @@ bool TableUtil::valueEqual(Column *col, char *val1, char *val2){
     }else{
         return strcmp(val1, val2) == 0;
     }
+}
+
+bool TableUtil::compareString(const string &str1, const string &str2){
+    if(str1.size() != str2.size())
+        return false;
+    for(int i = 0; i < str1.size(); i++)
+        if(tolower(str1[i]) != tolower(str2[i]))
+            return false;
+    return true;
+}
+bool TableUtil::compareString(const string &str1, const char* str2){
+    if(str1.size() != strlen(str2))
+        return false;
+    for(int i = 0; i < str1.size(); i++)
+        if(tolower(str1[i]) != tolower(str2[i]))
+            return false;
+    return true;
+}
+bool TableUtil::compareString(const char* str1, const char* str2){
+    if(strlen(str1) != strlen(str2))
+        return false;
+    for(int i = 0; i < strlen(str1); i++)
+        if(tolower(str1[i]) != tolower(str2[i]))
+            return false;
+    return true;
 }
 }
